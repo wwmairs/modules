@@ -14,11 +14,12 @@ class VCO {
     }
 
     set waveForm(w) {
-
+        // should assert that w is well-formed
+        this.oscillator.type = w;
     }
 
     get waveForm() {
-
+        return this.owcillator.type;
     }
 
     set frequency(f) {
