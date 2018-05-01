@@ -4,9 +4,9 @@ class ADSR {
     constructor(context) {
         this.context = context;
         this.attackTime  = 0.05;
-        this.decayTime   = 0.2;
+        this.decayTime   = 0.1;
         this.sustainValue = .5;
-        this.releaseTime = 0.2;
+        this.releaseTime = 0.6;
     }
 
     set attack(a) {
