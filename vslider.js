@@ -8,6 +8,10 @@
 class VSlider extends HTMLElement {
 	constructor() {
 		super();
+		this.shadow = this.attachShadow({mode: "open"});
+	}
+
+	connectedCallback() {
 		this.cont   = this.parentNode;
 		this.height = this.cont.clientHeight;
 		this.width  = this.cont.clientWidth;
@@ -20,7 +24,6 @@ class VSlider extends HTMLElement {
 		this.style.height     = this.height + "px";
 		this.style.width      = this.width + "px";
 
-		this.shadow = this.attachShadow({mode: "open"});
 		this.updateCallback = (v) => v;
 		// make a circular element
 		this.slider = document.createElement("div");
