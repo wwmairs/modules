@@ -1,13 +1,13 @@
 var context = new (window.AudioContext || window.webkitAudioContext);
+var sliderTest = 0;
 
 let vco = new VCO(context);
 let vcf = new VCF(context);
 let vca = new VCA(context);
 let env = new ADSR(context);
-let container = document.getElementById("slider-container");
 
-console.log(vcf);
-
+let sld = document.getElementById("slider1")
+sld.updateCallback = (v) => sliderTest = v;
 
 vco.waveForm = 'triangle';
 
@@ -16,4 +16,4 @@ vcf.connect(vca);
 env.connect(vca.amplitudeParam);
 vca.connect(context.destination);
 
-//window.setInterval(() => {env.gateOn()}, 1000);
+//window.setInterval(() => {console.log("slide:", sliderTest)}, 100);
