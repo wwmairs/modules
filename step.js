@@ -23,6 +23,7 @@ class STEP {
 		this.vca = new  VCA(this.ctx);
 		this.env = new ADSR(this.ctx);
 		this.frequencyParam = this.vco.frequencyParam;
+		this.duration = 250;
 
 		// connecting things up	
 		this.vco.connect(this.vca);
@@ -32,8 +33,6 @@ class STEP {
 	  }
 
 	gateOn() {
-  }
-
-	gateOn(duration) {
+		console.log('gate');
 	}
 }
