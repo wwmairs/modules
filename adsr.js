@@ -37,6 +37,7 @@ class ADSR {
         return this.releaseTime;
     }
 
+	  // this ought to take a durration
     gateOn() {
         let now = this.context.currentTime;
         this.param.cancelScheduledValues(now);

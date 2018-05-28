@@ -22,6 +22,9 @@ class STEP {
 		this.vco = new  VCO(this.ctx);
 		this.vca = new  VCA(this.ctx);
 		this.env = new ADSR(this.ctx);
+	
+		this.input 	= this.vca;
+		this.output = this.vca;
 		this.frequencyParam = this.vco.frequencyParam;
 		this.duration = 250;
 
@@ -34,5 +37,14 @@ class STEP {
 
 	gateOn() {
 		console.log('gate');
+		this.env.gateOn()
+	}
+
+	connect(module) {
+		if (module.hasOwnProperty('input')) {
+			this.output.connect(module.input);
+		} else {
+			this.output.connect(module);
+		}
 	}
 }
