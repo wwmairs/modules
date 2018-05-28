@@ -1,0 +1,10 @@
+body {
+	margin: 0px;
+}
+
+.step {
+	position: relative;
+	float: left;
+	width: 12.5vw;
+	height: 100vh;
+}

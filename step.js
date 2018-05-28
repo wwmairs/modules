@@ -15,9 +15,8 @@
   **/
 
 class STEP {
-	constructor(_ctx, _cont) {
+	constructor(_ctx) {
 		this.ctx  =  _ctx;
-		this.cont = _cont;
 		
 		this.vco = new  VCO(this.ctx);
 		this.vca = new  VCA(this.ctx);

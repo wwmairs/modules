@@ -67,7 +67,7 @@ class VSlider extends HTMLElement {
 	get value() {
 		return Math.round(scale(this.slider.offsetTop, this.offsetTop,
 													  this.offsetTop + this.offsetHeight - this.sliderHeight,
-								 						0, 127));
+								 						48, 72));
 
 	}
 }
