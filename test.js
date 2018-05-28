@@ -1,20 +1,8 @@
 var context = new (window.AudioContext || window.webkitAudioContext);
 
-var steps = [];
-var slids = document.getElementsByClassName("slider");
+var cont = document.getElementById("step-container");
 
-for (var i = 0; i < slids.length; i++) {
-	let newStep = new STEP(context);
-	slids[i].updateCallback = (v) => {
-		let newFreq = midiToFrequency(v);
-		newStep.frequencyParam.setValueAtTime(newFreq, context.currentTime);
-	};
-	newStep.connect(context.destination);
-	steps.push(newStep);
-}
+let slide = document.createElement("vertical-slider");
+cont.appendChild(slide);
+console.log(slide);
 
-var index = 0;
-window.setInterval(() => {
-	steps[index].gateOn();
-	index = (index + 1) % 8;	
-}, 500);
