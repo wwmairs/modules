@@ -19,7 +19,7 @@ class VCO {
     }
 
     get waveForm() {
-        return this.owcillator.type;
+        return this.oscillator.type;
     }
 
     set frequency(f) {
