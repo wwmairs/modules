@@ -21,8 +21,6 @@ class VSlider extends HTMLElement {
 		// to set colors
 		this.style.background = "#f2e52d";
 		this.style.position   = "absolute";
-		this.style.height     = this.height + "px";
-		this.style.width      = this.width + "px";
 
 		this.updateCallback = (v) => v;
 		// make a circular element
@@ -66,6 +64,24 @@ class VSlider extends HTMLElement {
 
 		this.shadow.appendChild(this.slider);
 	}
+
+	set height(h) {
+		this._h = h;
+		this.style.height = h + "px";
+	}
+
+	get height() {
+		return this._h;
+	}
+
+	get width() {
+		return this._w;
+	}
+
+	set width(w) {
+		this._w = w;
+		this.style.width = w + "px";
+ 	}
 
 	get value() {
 		return Math.round(scale(this.slider.offsetTop, this.offsetTop,

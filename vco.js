@@ -6,7 +6,7 @@ class VCO {
         this.oscillator      = context.createOscillator();
         this.oscillator.type = 'sine';
         this.frequencyParam  = this.oscillator.frequency;
-        this.frequency       = 440;
+        this.frequency       = 146;
         this.oscillator.start(0);
 
         this.input  = this.oscillator;

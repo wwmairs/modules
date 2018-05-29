@@ -24,7 +24,6 @@ class STEP {
 	
 		this.input 	= this.vca;
 		this.output = this.vca;
-		this.frequencyParam = this.vco.frequencyParam;
 		this.duration = 250;
 
 		// connecting things up	
@@ -33,6 +32,10 @@ class STEP {
 	  // vca needs to be connected to something
 
 	  }
+
+	set frequency(f) {
+		this.vco.frequency = f;
+	}
 
 	gateOn() {
 		console.log('gate');
