@@ -38,8 +38,7 @@ class STEP {
 	}
 
 	gateOn() {
-		console.log('gate');
-		this.env.gateOn()
+		this.env.gateOn();
 	}
 
 	connect(module) {
