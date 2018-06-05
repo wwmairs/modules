@@ -29,7 +29,7 @@ class SEQU extends HTMLElement {
 		this.cont      = this.parentNode;
 		this.height    = this.cont.clientHeight;
 		this.width     = this.cont.clientWidth;
-		this.modulator = new MODULATOR(this.ctx);
+		this.modulator = new MODU(this.ctx);
 
 		// name sequencer
 		if (this.hasAttribute("name")) {

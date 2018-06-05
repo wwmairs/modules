@@ -4,7 +4,7 @@
 	* relies on vco.js and vca.js
 	**/
 
-class MODULATOR {
+class MODU {
     constructor(context) {
         this.context         = context;
         this.modulator       = new VCO(this.context);

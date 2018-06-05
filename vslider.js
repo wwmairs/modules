@@ -22,6 +22,8 @@ class VSlider extends HTMLElement {
 		this.style.background = "#f2e52d";
 		this.style.position   = "absolute";
 
+		// grab target, if specified
+
 		this.updateCallback = (v) => v;
 		// make a circular element
     this.slider = document.createElement("div");
