@@ -4,6 +4,8 @@
   * a self contained sequencer
   *
   * either connects to a globally defined context variable, 'ctx', or makes its own
+	*
+	* connects to global 'instruments' object
   *
   **/
 
@@ -13,6 +15,7 @@ class SEQU extends HTMLElement {
 		this.steps   = [];
 		this.sliders = [];
 		this.shadow  = this.attachShadow({mode: "open"});
+		this.on 		 = false;
 		if (ctx == undefined) {
 			this.ctx = new (window.AudioContext || window.webkitAudioContext);
 		} else {
@@ -34,6 +37,19 @@ class SEQU extends HTMLElement {
 			this.numSteps = 8;
 		}
 		
+		if (this.hasAttribute("name")) {
+			this.name = this.getAttribute("name");
+		} else {
+			this.name = "unnamed_sequencer";
+		}
+
+		if (window.instruments == undefined) {
+			window.instruments = {};
+			window.instruments[this.name] = this;
+		} else {
+			window.instruments[this.name] = this;
+		}
+
 		var xPos = 0;
 		var stepWidth = this.width / this.numSteps;
 		for (var i = 0; i < this.numSteps; i++) {
@@ -60,17 +76,30 @@ class SEQU extends HTMLElement {
 				newStep.frequency = midiToFrequency(v);
 			};
 			xPos += stepWidth;
-		  /* make div
- 			 * make slider
- 			 * make step
- 			 * store steps
- 			 * append to shadow
- 			 *
+		  /* 
  			 * ideas:
  			 * 	one method to connect all oscillators to something
  			 * 	and to connect to all oscillators	
  			 */ 	
 		}
+	}
+
+
+	mapSteps(f) {
+		if (typeof(f) != "function") {
+			throw "trying to mapSteps but 'f' is of type " + typeof(f);
+		}
+		for (let i = 0; i < this.steps.length; i++) {
+			f(this.steps[i]);	
+		}	
+	}
+
+	set on(b) {
+		this.playing = b;
+	}
+	
+	get on() {
+		return this.playing;
 	}
 
 	set duration(d) {
@@ -81,6 +110,10 @@ class SEQU extends HTMLElement {
 
 	set stepTime(t) {
 		this.st = t;
+		if (this.on) {
+			this.stop();
+			this.start();
+		}
 	}
 	
 	get stepTime() {
