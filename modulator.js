@@ -11,6 +11,8 @@ class MODULATOR {
 				this.vca						 = new VCA(this.context);
         this.frequencyParam  = this.modulator.frequencyParam;
         this.frequency       = 146;
+				this.amplitude			 = 100;
+				this.waveForm				 = "square";
 			  this.modulator.connect(this.vca);	
 
         this.input  = this.modulator;
