@@ -29,7 +29,7 @@ class MODULATOR {
     }
 
 		set amplitude(a) {
-				this.vca.amplitude(a);
+				this.vca.amplitude = a;
 		}
 	
 		get amplitude() {
@@ -37,11 +37,11 @@ class MODULATOR {
 		}
 
     set frequency(f) {
-        this.frequencyParam.setValueAtTime(f, this.context.currentTime);
+				this.modulator.frequency = f;
     }
 
     get frequency() {
-        return this.frequencyParam.value;
+        return this.modulator.frequency;
     }
 
     // this can connect to either another module, or an AudioNode
