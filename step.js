@@ -16,15 +16,14 @@
 
 class STEP {
 	constructor(_ctx) {
-		this.ctx  =  _ctx;
-		
+		this.ctx =  _ctx;
 		this.vco = new  VCO(this.ctx);
 		this.vca = new  VCA(this.ctx);
 		this.env = new ADSR(this.ctx);
-	
 		this.input 	= this.vca;
 		this.output = this.vca;
-		this.duration = 250;
+		this.duration 			= 250;
+		this.frequencyParam = this.vco.frequencyParam;
 
 		// connecting things up	
 		this.vco.connect(this.vca);
