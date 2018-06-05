@@ -29,7 +29,22 @@ class SEQU extends HTMLElement {
 		this.cont      = this.parentNode;
 		this.height    = this.cont.clientHeight;
 		this.width     = this.cont.clientWidth;
+		this.modulator = new MODULATOR(this.ctx);
 
+		// name sequencer
+		if (this.hasAttribute("name")) {
+			this.name = this.getAttribute("name");
+		} else {
+			this.name = "unnamed_sequencer";
+		}
+		// add sequencer to window instruments
+		if (window.instruments == undefined) {
+			window.instruments = {};
+			window.instruments[this.name] = this;
+		} else {
+			window.instruments[this.name] = this;
+		}
+		// make steps and hook em up
 		if (this.hasAttribute("steps")) {
 			this.numSteps = this.getAttribute("steps");
 		} else {
@@ -37,19 +52,7 @@ class SEQU extends HTMLElement {
 			this.numSteps = 8;
 		}
 		
-		if (this.hasAttribute("name")) {
-			this.name = this.getAttribute("name");
-		} else {
-			this.name = "unnamed_sequencer";
-		}
-
-		if (window.instruments == undefined) {
-			window.instruments = {};
-			window.instruments[this.name] = this;
-		} else {
-			window.instruments[this.name] = this;
-		}
-
+		// creating sliders and adding them to shadow
 		var xPos = 0;
 		var stepWidth = this.width / this.numSteps;
 		for (var i = 0; i < this.numSteps; i++) {
@@ -76,12 +79,14 @@ class SEQU extends HTMLElement {
 				newStep.frequency = midiToFrequency(v);
 			};
 			xPos += stepWidth;
-		  /* 
- 			 * ideas:
- 			 * 	one method to connect all oscillators to something
- 			 * 	and to connect to all oscillators	
- 			 */ 	
 		}
+
+
+		// set up modulator
+		this.mapSteps((s) => {
+			this.modulator.connect(s.frequencyParam);
+		});
+		
 	}
 
 
@@ -92,14 +97,6 @@ class SEQU extends HTMLElement {
 		for (let i = 0; i < this.steps.length; i++) {
 			f(this.steps[i]);	
 		}	
-	}
-
-	set on(b) {
-		this.playing = b;
-	}
-	
-	get on() {
-		return this.playing;
 	}
 
 	set duration(d) {
