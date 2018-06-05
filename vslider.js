@@ -22,9 +22,14 @@ class VSlider extends HTMLElement {
 		this.style.background = "#f2e52d";
 		this.style.position   = "absolute";
 
-		// grab target, if specified
-
-		this.updateCallback = (v) => v;
+		// grab target, if specified, default is to give midi to freq
+		if (this.hasAttribute("target")) {
+			this.updateCallback = (v) => {
+				target = midiToFrequency(v);
+			};
+		} else {
+			this.updateCallback = (v) => v;
+		}
 		// make a circular element
     this.slider = document.createElement("div");
     this.slider.style.position = "absolute";
