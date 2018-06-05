@@ -24,13 +24,13 @@ class VSlider extends HTMLElement {
 
 		this.updateCallback = (v) => v;
 		// make a circular element
-		this.slider = document.createElement("div");
-		this.slider.style.position = "absolute";
-		this.slider.style.height = this.sliderHeight + "px";
-		this.slider.style.width = "100%";
-		this.slider.style.left = "0";
-		this.slider.style.top = (this.height / 2) - 5 + "px";
-		this.slider.style.background = "#5ed6a3";
+    this.slider = document.createElement("div");
+    this.slider.style.position = "absolute";
+    this.slider.style.height = this.sliderHeight + "px";
+    this.slider.style.width = "100%";
+    this.slider.style.left = "0";
+    this.slider.style.top = (this.height / 2) - 5 + "px";
+    this.slider.style.background = "#5ed6a3";
 
 		// make this shit draggable
 		// vars for calculating distance traveled

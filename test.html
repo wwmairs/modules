@@ -7,15 +7,33 @@
 				<script>
 					var ctx = new (window.AudioContext || window.webkitAudioContext);
 				</script>
+
 				<div style="position: absolute;
-									  top: 50%;
-										left: 50%;
-										transform: translate(-50%, -50%);
+									  top: 10px;
+										left: 10px;
 										width: 800px;
 										height: 400px;
 										border: 1px solid black;" id="sequ-container">
-					<step-sequence steps="7" id="sequ"></step-sequence>
+					<step-sequence steps="7" name="seq1" id="sequ"></step-sequence>
 				</div>
+				<div style="position: absolute;
+										top: 420px;
+										left: 10px;
+										width: 100px; 
+										height: 200px; 
+										background: blue;"
+						 onclick="let s = window.instruments.sequencer;
+											(s.on ? s.stop() : s.start());">
+				</div>
+
+				<div style="position: absolute;
+										top: 420px;
+										left: 120px;
+										width: 100px;
+										height: 200px;" id="freq-slider">
+					<vertical-slider target="seq1.frequencyParam"></vertical-slider>
+				</div>
+										
 
 				<script src='utils.js'   type='text/javascript'></script>
 				<script src='vslider.js' type='text/javascript'></script>
