@@ -23,9 +23,11 @@ class VSlider extends HTMLElement {
 		this.style.position   = "absolute";
 
 		// grab target, if specified, default is to give midi to freq
-		if (this.hasAttribute("target")) {
+		if (this.hasAttribute("targetf")) {
+			let target_string = this.getAttribute("targetf");
 			this.updateCallback = (v) => {
-				target = midiToFrequency(v);
+				let t = eval(target_string);
+				t.frequency = midiToFrequency(v);
 			};
 		} else {
 			this.updateCallback = (v) => v;
