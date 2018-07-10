@@ -1,7 +1,7 @@
 /**
   * sequ.js
   *
-  * a self contained sequencer
+  * a sequencer with steps
   *
   * either connects to a globally defined context variable, 'ctx', or makes its own
 	*
@@ -12,7 +12,6 @@
 class SEQU extends HTMLElement {
 	constructor() {
 		super();
-		this.steps   = [];
 		this.sliders = [];
 		this.shadow  = this.attachShadow({mode: "open"});
 		this.on 		 = false;
@@ -63,39 +62,24 @@ class SEQU extends HTMLElement {
 			newDiv.style.height = this.height + "px";
 			newDiv.style.width = stepWidth + "px";
 
-
-			let newStep = new STEP(this.ctx);
-			// this one maybe should go to a this.output or something??
-			newStep.connect(this.ctx.destination);					
-			this.steps.push(newStep);
-
 			let newSlider = document.createElement("vertical-slider");
 			this.sliders.push(newSlider);
 
 			newDiv.appendChild(newSlider);
 			this.shadow.appendChild(newDiv);
 			// this needs to happen after connectedCallback in VSlider	
-			newSlider.updateCallback = (v) => {
-				newStep.frequency = midiToFrequency(v);
-			};
 			xPos += stepWidth;
 		}
 
-
-		// set up modulator
-		this.mapSteps((s) => {
-			this.modulator.connect(s.frequencyParam);
-		});
-		
 	}
 
 
-	mapSteps(f) {
+	mapSliders(f) {
 		if (typeof(f) != "function") {
 			throw "trying to mapSteps but 'f' is of type " + typeof(f);
 		}
-		for (let i = 0; i < this.steps.length; i++) {
-			f(this.steps[i]);	
+		for (let i = 0; i < this.sliders.length; i++) {
+			f(this.sliders[i]);	
 		}	
 	}
 
@@ -117,11 +101,30 @@ class SEQU extends HTMLElement {
 		return this.st;
 	}
 
+	connect(instrument) {
+		// this is an interesting challenge
+		// maybe inspect instrument to see the number of voices
+		//		=> way better idea, abstract voices away from the sequencer!!!
+		// hold on to instrument, to access frequency and gateOn
+	}
+
 	start() {
 		this.currIndex  = 0;
 		this.on         = true;
 		this.timer      = window.setInterval(() => {
-			this.steps[this.currIndex].gateOn();
+			// this is the old way it workds
+			// this.steps[this.currIndex].gateOn();
+			// 
+			// figure out where the gateOn needs to be sent!!
+			// there maybe could be a monophonic instrument, in which case:
+			// 	- frequency gets updated
+			//  - gate on sent to instrument
+			// there could be a polyphonoic instrument, in which case:
+			//	- figure out how to cycle through available oscillators
+
+			//  WAY BETTER IDEA: abstract voices from sequencer
+			//	=> the instrument offers a gateOn method (and maybe even one with a frequency included)
+			//		 and it handles the rest
 			this.currIndex++;
 			this.currIndex %= this.numSteps;
 		}, this.stepTime);
