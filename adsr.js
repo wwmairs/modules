@@ -39,14 +39,28 @@ class ADSR {
 
 	  // this ought to take a durration
     gateOn() {
-        let now = this.context.currentTime;
-        this.param.cancelScheduledValues(now);
-        this.param.setValueAtTime(0, now);
-        this.param.linearRampToValueAtTime(1, now + this.attack);
-        // something different happens if you're holding a note
-        this.param.linearRampToValueAtTime(0, now + this.attack 
-                                                  + this.release);
+      let now = this.context.currentTime;
+      this.param.cancelScheduledValues(now);
+      this.param.setValueAtTime(0, now);
+      this.param.linearRampToValueAtTime(1, now + this.attack);
+      // something different happens if you're holding a note
+      this.param.linearRampToValueAtTime(0, now + this.attack 
+                                                + this.release);
     }
+
+		gateOn(d) {
+      let now = this.context.currentTime;
+      this.param.cancelScheduledValues(now);
+      this.param.setValueAtTime(0, now);
+      this.param.linearRampToValueAtTime(1, now + this.attack);
+      // something different happens if you're holding a note
+			this.param.linearRampToValueAtTime(this.sustainValue, now + this.attack 
+																																+ this.decay);
+      this.param.linearRampToValueAtTime(0, now + this.attack 
+																								+ this.decay 
+																								+ d
+                                                + this.release);
+		}
 
     // unlike other modules, this one connects to an AudioParam, 
     // rather than either a module or an AudioNode
