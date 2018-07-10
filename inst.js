@@ -1,7 +1,7 @@
 /**
-  * step.js
+  * inst.js
   *
-  * a sequencer step
+  * an instrument super class
   * contains its own oscillator, vca, and envelope
   *
   * connects to a context
@@ -14,7 +14,7 @@
   * 	adsr.js
   **/
 
-class STEP {
+class INST {
 	constructor(_ctx) {
 		this.ctx =  _ctx;
 		this.vco = new  VCO(this.ctx);
