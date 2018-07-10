@@ -42,11 +42,13 @@ class MONO extends INST {
 	}
 
 	gateOn(f) {
+		this.frequency = f;
 		this.env.gateOn();
 	}
 
 	gateOn(f, d) {
-		this.env.gateOn();
+		this.frequency = f;
+		this.env.gateOn(d);
 	}
 
 	connect(module) {
@@ -60,12 +62,11 @@ class MONO extends INST {
 
 class INST {
 	constructor(_ctx) {
-		this.ctx      =  _ctx;
-		this.duration = 250;
-	  }
+		this.ctx =  _ctx;
+	 }
 	
 	set frequency(f) {
-		throw new Error("getter 'frequency' must be defined in a subclass of INST");
+		throw new Error("setter 'frequency' must be defined in a subclass of INST");
 	}
 
 	gateOn() {
