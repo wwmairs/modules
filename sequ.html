@@ -6,6 +6,9 @@
     <body>
 				<script>
 					var ctx = new (window.AudioContext || window.webkitAudioContext);
+					function connectSequencer() {
+						let s = document.querySelector("#instrumentSelector").value;
+					}
 				</script>
 
 				<div style="position: absolute;
@@ -16,23 +19,21 @@
 										border: 1px solid black;" id="sequ-container">
 					<step-sequence steps="7" name="seq1" id="sequ"></step-sequence>
 				</div>
-				<div style="position: absolute;
+				<div id="startButton" 
+						 style="position: absolute;
 										top: 420px;
 										left: 10px;
 										width: 100px; 
 										height: 200px; 
 										background: blue;"
-						 onclick="let s = window.instruments.seq1;
-											(s.on ? s.stop() : s.start());">
+						  onclick="document.querySelector('#sequ').toggle()">
 				</div>
-
-				<div style="position: absolute;
-										top: 420px;
-										left: 120px;
-										width: 100px;
-										height: 200px;" id="freq-slider">
-					<vertical-slider targetf="window.instruments.seq1.modulator"></vertical-slider>
-				</div>
+				<select id="instrumentSelector" 
+						 		style="position: absolute;
+									 		 top: 420px;
+										   left: 210px;"
+							  onchange="connectSequencer()">
+				</select>
 
 				<script src='utils.js'   type='text/javascript'></script>
 				<script src='vslider.js' type='text/javascript'></script>
@@ -41,8 +42,18 @@
         <script src='vca.js' 		 type='text/javascript'></script>
         <script src='adsr.js' 	 type='text/javascript'></script>
 				<script src='modu.js'    type='text/javascript'></script>
-				<script src='step.js'    type='text/javascript'></script>
+				<script src='inst.js'    type='text/javascript'></script>
 				<script src='sequ.js'		 type='text/javascript'></script>
         <script src='test.js' 	 type='text/javascript'></script>
     </body>
+
+		<script>
+			let select = document.querySelector("#instrumentSelector");
+			for (instrument in window.modules["instruments"]) {
+				let option = document.createElement("option");
+				option.value = instrument.module;
+				option.innerHTML = instrument.name;
+				select.appendChild(option);
+			}
+		</script>
 </html>

@@ -3,9 +3,7 @@
   *
   * a sequencer with steps
   *
-  * either connects to a globally defined context variable, 'ctx', or makes its own
-	*
-	* connects to global 'instruments' object
+	* connects to global 'modules' object
   *
   **/
 
@@ -15,11 +13,6 @@ class SEQU extends HTMLElement {
 		this.sliders = [];
 		this.shadow  = this.attachShadow({mode: "open"});
 		this.on 		 = false;
-		if (ctx == undefined) {
-			this.ctx = new (window.AudioContext || window.webkitAudioContext);
-		} else {
-			this.ctx = ctx;
-		}
 	}
 
 	connectedCallback() {
@@ -28,21 +21,19 @@ class SEQU extends HTMLElement {
 		this.cont      = this.parentNode;
 		this.height    = this.cont.clientHeight;
 		this.width     = this.cont.clientWidth;
-		this.modulator = new MODU(this.ctx);
 
+		// add sequencer to window modules 
+		window.modules = window.modules || {};
+		window.modules["sequencers"] = window.modules["sequencers"] || [];
 		// name sequencer
 		if (this.hasAttribute("name")) {
 			this.name = this.getAttribute("name");
 		} else {
-			this.name = "unnamed_sequencer";
+			this.name = "sequencer" + window.modules["sequencers"].length;
 		}
-		// add sequencer to window instruments
-		if (window.instruments == undefined) {
-			window.instruments = {};
-			window.instruments[this.name] = this;
-		} else {
-			window.instruments[this.name] = this;
-		}
+
+		window.modules["sequencers"].push({"name" : this.name, "module" : this});
+
 		// make steps and hook em up
 		if (this.hasAttribute("steps")) {
 			this.numSteps = this.getAttribute("steps");
@@ -108,7 +99,12 @@ class SEQU extends HTMLElement {
 		// hold on to instrument, to access frequency and gateOn
 	}
 
+	toggle() {
+		this.on ? this.stop() : this.start();
+	}
+
 	start() {
+		console.log(this.name, "started");
 		this.currIndex  = 0;
 		this.on         = true;
 		this.timer      = window.setInterval(() => {
@@ -132,6 +128,7 @@ class SEQU extends HTMLElement {
 	}
 
 	stop() {
+		console.log(this.name, "stopped");
 		this.on = false;
 		window.clearInterval(this.timer);
 	}

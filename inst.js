@@ -5,6 +5,7 @@
 	* 
 	* and a monophonic sub class
   * contains its own oscillator, vca, and envelope
+	* connects to window.ctx, if it exists, or else initializes it
   *
   * connects to a context
   * oscillator can be connected to for FM
@@ -17,9 +18,48 @@
   **/
 
 
+
+class INST {
+	constructor() {
+		ctx = ctx || new (window.AudioContext || window.webkitAudioContext);
+		this.ctx = ctx;
+		this.connectToWindow();
+	 }
+	
+	set frequency(f) {
+		throw new Error("setter 'frequency' must be defined in a subclass of INST");
+	}
+
+	gateOn() {
+		throw new Error("method 'gateOn()' must be defined in a subclass of INST");
+	}
+
+	gateOn(f) {
+		throw new Error("method 'gateOn(f)' must be defined in a subclass of INST");
+	}
+
+	gateOn(f, d) {
+		throw new Error("method 'gateOn(f, d)' must be defined in a subclass of INST");
+	}
+
+	connectToWindow() {
+		// add unnamed INST to window modules
+		window.modules = window.modules || {};
+		window.modules["instruments"] = window.modules["instruments"] || [];
+		// come up with unique name for the instrument
+		this.name = "instrument" + window.modules["instruments"].length;
+		window.modules["instruments"].push({"name" : this.name, "module" : this});
+	}
+	
+	connect(module) {
+		throw new Error("method 'connect(module)' must be defined in a subclass of INST");
+	}
+
+}
+
 class MONO extends INST {
-	constructor(_ctx) {
-		super(_ctx);
+	constructor() {
+		super();
 		this.vco    = new  VCO(this.ctx);
 		this.vca    = new  VCA(this.ctx);
 		this.env    = new ADSR(this.ctx);
@@ -58,31 +98,4 @@ class MONO extends INST {
 			this.output.connect(module);
 		}
 	}
-}
-
-class INST {
-	constructor(_ctx) {
-		this.ctx =  _ctx;
-	 }
-	
-	set frequency(f) {
-		throw new Error("setter 'frequency' must be defined in a subclass of INST");
-	}
-
-	gateOn() {
-		throw new Error("method 'gateOn()' must be defined in a subclass of INST");
-	}
-
-	gateOn(f) {
-		throw new Error("method 'gateOn(f)' must be defined in a subclass of INST");
-	}
-
-	gateOn(f, d) {
-		throw new Error("method 'gateOn(f, d)' must be defined in a subclass of INST");
-	}
-	
-	connect(module) {
-		throw new Error("method 'connect(module)' must be defined in a subclass of INST");
-	}
-
 }
