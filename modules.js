@@ -6,7 +6,7 @@
 var MIDI_FREQS = [];
 // generate array of midi frequency values
 // from http://subsynth.sourceforge.net/midinote2freq.html
-let a = 440;
+const a = 440;
 for (var i = 0; i <= 127; i++) {
 	MIDI_FREQS[i] = (a / 32) * (Math.pow(2, ((i - 9) / 12)));
 }	
@@ -527,22 +527,6 @@ class SEQU extends HTMLElement {
     this.height    = this.cont.clientHeight;
     this.width     = this.cont.clientWidth;
   
-    
-
-    /*
-    // add sequencer to window modules 
-    window.modules = window.modules || {};
-    window.modules["sequencers"] = window.modules["sequencers"] || [];
-    // name sequencer
-    if (this.hasAttribute("name")) {
-      this.name = this.getAttribute("name");
-    } else {
-      this.name = "sequencer" + window.modules["sequencers"].length;
-    }
-
-    window.modules["sequencers"].push({"name" : this.name, "module" : this});
-    */
-
     // make steps and hook em up
     if (this.hasAttribute("steps")) {
       this.numSteps = this.getAttribute("steps");
@@ -573,8 +557,8 @@ class SEQU extends HTMLElement {
 
     // testing with module_worker
     if (!!window.SharedWorker) {
-      var worker = new SharedWorker("module_worker.js");
-      worker.port.postMessage(this);
+      this.worker = new SharedWorker("worker.js");
+      this.worker.port.postMessage('new sequencer');
     } else {
       throw new Error("SharedWorked API not supported by this browser.");
     }
@@ -652,4 +636,6 @@ class SEQU extends HTMLElement {
 
 customElements.define('step-sequence', SEQU);
 
-
+export { MIDI_FREQS, a, scale, midiToFrequency,
+         VCO, VCA, VCF, ADSR, MODU, INST, MONO, 
+         FM, VSlider, SEQU};

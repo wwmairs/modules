@@ -5,12 +5,16 @@
 	* hold onto the context and create and store modules
 	*
 	**/
-import "modules.js";
 
-var ctx = new (window.AudioContext || window.webkitAudioContext);
 var instruments = [];
+	importScripts();
 
 onconnect = function(e) {
+//	importScripts("modules.js");
+	
+	var ctx = new (self.AudioContext || self.webkitAudioContext);
+	
+	console.log('worker conected');
 	var port = e.ports[0];
 
 	port.onmessage = function(e) {
@@ -28,10 +32,12 @@ onconnect = function(e) {
 					**/
 				switch(cmd[1]) {
 					case 'FM':
+						console.log("received new FM message");
 						let newFM = new FM(ctx);
 						let name  = "FM" + instruments.length;
 						instruments.push({"name" : name, "instrument" : newFM});
-						port.postMessage("new FM " + name);
+						port.postMessage("created FM " + name);
+						console.log("posted message from worker after creating new FM");
 					default:
 						throw new Error("Unrecognized intstrument name:", cmd[1]);
 				}
@@ -47,12 +53,8 @@ onconnect = function(e) {
 						throw new Error("Unrecognized noteon command:", e.data[0]);
 				}
 			default:
-				throw new Error("Unrecognized command:", e.data[0]);
+				//throw new Error("Unrecognized command:", e.data[0]);
+				port.postMessage("unrecognized message received by worker");
 		}
-		/* messages the worker must respond to
-		 * a method, possibly with args
-		 */
-		//var workerResult = 'Result: ' + (e.data[0] * e.data[1]);
-		//port.postMessage(workerResult);
 	}
 }
