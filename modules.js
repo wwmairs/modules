@@ -199,30 +199,15 @@ class ADSR {
         return this.releaseTime;
     }
 
-      // this ought to take a durration
-    gateOn() {
+    gateOn(d = 0) {
       let now = this.context.currentTime;
       this.param.cancelScheduledValues(now);
       this.param.setValueAtTime(0, now);
       this.param.linearRampToValueAtTime(1, now + this.attack);
       // something different happens if you're holding a note
-      this.param.linearRampToValueAtTime(0, now + this.attack 
-                                                + this.release);
+      this.param.linearRampToValueAtTime(this.sustainValue, now + this.attack + this.decay);
+      this.param.linearRampToValueAtTime(0, now + this.attack + this.decay + d + this.release);
     }
-
-        gateOn(d) {
-      let now = this.context.currentTime;
-      this.param.cancelScheduledValues(now);
-      this.param.setValueAtTime(0, now);
-      this.param.linearRampToValueAtTime(1, now + this.attack);
-      // something different happens if you're holding a note
-            this.param.linearRampToValueAtTime(this.sustainValue, now + this.attack 
-                                                                                                                                + this.decay);
-      this.param.linearRampToValueAtTime(0, now + this.attack 
-                                                                                                + this.decay 
-                                                                                                + d
-                                                + this.release);
-        }
 
     // unlike other modules, this one connects to an AudioParam, 
     // rather than either a module or an AudioNode
@@ -241,12 +226,12 @@ class MODU {
     constructor(context) {
         this.context         = context;
         this.modulator       = new VCO(this.context);
-                this.vca                         = new VCA(this.context);
+        this.vca             = new VCA(this.context);
         this.frequencyParam  = this.modulator.frequencyParam;
         this.frequency       = 146;
-                this.amplitude           = 100;
-                this.waveForm                = "square";
-              this.modulator.connect(this.vca); 
+        this.amplitude       = 100;
+        this.waveForm        = "square";
+        this.modulator.connect(this.vca); 
 
         this.input  = this.modulator;
         this.output = this.vca;
@@ -343,7 +328,7 @@ class MONO extends INST {
 		this.vco    = new  VCO(this.ctx);
 		this.vca    = new  VCA(this.ctx);
 		this.env    = new ADSR(this.ctx);
-		this.input 	= this.vca;
+		this.input 	= this.vco;
 		this.output = this.vca;
 		this.frequencyParam = this.vco.frequencyParam;
 
@@ -357,17 +342,10 @@ class MONO extends INST {
 		this.vco.frequency = f;
 	}
 
-	gateOn() {
-		this.env.gateOn();
-	}
-
-	gateOn(f) {
-		this.frequency = f;
-		this.env.gateOn();
-	}
-
-	gateOn(f, d) {
-		this.frequency = f;
+	gateOn(f = false, d = false) {
+		if (f) {
+			this.frequency = f;
+		}
 		this.env.gateOn(d);
 	}
 
@@ -418,24 +396,13 @@ class Handler {
 
   newFM() {
     let newFM = new FM(this.ctx);
+		newFM.connect(this.ctx.destination);
     let name = "FM" + this.instruments.length;
     this.instruments.push({"name" : name, "inst" : newFM});
     return name;
   }
 
-  noteon(name) {
-    let i = this.find(name);
-    assert(i != false, "couldn't find inst for noteon");
-    i.gateOn();
-  }
-
-  noteon(name, frequency) {
-    let i = this.find(name);
-    assert(i != false, "couldn't find inst for noteon");
-    i.gateOn(frequency);
-  }
-
-  noteon(name, frequency, duration) {
+  noteon(name, frequency = false, duration = false) {
     let i = this.find(name);
     assert(i != false, "couldn't find inst for noteon");
     i.gateOn(frequency, duration);
@@ -444,7 +411,7 @@ class Handler {
   // returns the 'inst'
   find(name) {
     let found = false;
-    mapInstruments((i) => {
+    this.mapInstruments((i) => {
       if (i.name == name) {
         found = i.inst;
       }
@@ -458,6 +425,7 @@ class Handler {
     }
   }
 }
+
 
 /**
   * HTML elements
@@ -619,13 +587,6 @@ class SEQU extends HTMLElement {
       xPos += stepWidth;
     }
 
-    // testing with module_worker
-    if (!!window.SharedWorker) {
-      this.worker = new SharedWorker("worker.js");
-      this.worker.port.postMessage('new sequencer');
-    } else {
-      throw new Error("SharedWorked API not supported by this browser.");
-    }
   }
 
 
@@ -702,7 +663,8 @@ customElements.define('step-sequence', SEQU);
 
 
 
-
+/*
 export { MIDI_FREQS, a, scale, midiToFrequency, assert,
          VCO, VCA, VCF, ADSR, MODU, INST, MONO, 
          FM, VSlider, SEQU, Handler};
+*/
