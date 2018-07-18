@@ -19,6 +19,20 @@ function midiToFrequency(n) {
 	return MIDI_FREQS[n];
 }
 
+function assert(bool) {
+	if (!bool) {
+		console.log("failed assertion");
+		throw new Error("failed assertion");
+	}
+}
+
+function assert(bool, msg) {
+	if (!bool) {
+		console.log(msg);
+		throw new Error(msg);
+	}
+}
+
 // a straightforward vco
 
 class VCO {
