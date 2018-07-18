@@ -16,22 +16,23 @@
 										width: 800px;
 										height: 400px;
 										border: 1px solid black;" id="sequ-container">
-					<step-sequence steps="7" name="seq1" id="sequ"></step-sequence>
+					<step-sequence steps="7" class="sequencer" name="seq1" id="sequ"></step-sequence>
 				</div>
-				<div id="startButton" 
-						 style="position: absolute;
-										top: 420px;
+				<div style="position: absolute;
+									  top: 420px;
 										left: 10px;
-										width: 100px; 
-										height: 200px; 
-										background: blue;"
-						  onclick="document.querySelector('#sequ').toggle()">
+										width: 800px;
+										height: 400px;
+										border: 1px solid black;" id="fm-elem-container">
+					<fm-elem id="fm"></fm-elem>
 				</div>
-				<select id="instrumentSelector" 
-						 		style="position: absolute;
-									 		 top: 420px;
-										   left: 210px;"
-							  onchange="connectSequencer()">
-				</select>
+				<div style="position: absolute;
+									  top: 830px;
+										left: 10px;
+										width: 800px;
+										height: 400px;
+										border: 1px solid black;" id="fm-elem-container">
+					<fm-elem id="fm"></fm-elem>
+				</div>
     </body>
 </html>
