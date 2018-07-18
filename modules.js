@@ -377,6 +377,14 @@ class FM extends MONO {
         this.modulator = new MODU(this.ctx);
         this.modulator.connect(this.frequencyParam);
     }
+
+	gateOn(f = false, d = false) {
+		if (f) {
+			this.modulator.frequency = f * 4;
+			this.frequency = f;
+		}
+		this.env.gateOn(d);
+	}
 }
 
 
@@ -575,7 +583,7 @@ class SEQU extends HTMLElement {
       newDiv.style.position = "absolute";
       newDiv.style.top = 0;
       newDiv.style.left = xPos + "px";
-      newDiv.style.height = this.height + "px";
+      newDiv.style.height = this.height - 100 + "px";
       newDiv.style.width = stepWidth + "px";
 
       let newSlider = document.createElement("vertical-slider");
@@ -587,6 +595,24 @@ class SEQU extends HTMLElement {
       xPos += stepWidth;
     }
 
+		// create button
+		let newDiv = document.createElement("div");
+		newDiv.style.position = "absolute";
+		newDiv.style.top = this.height - 100 + "px";
+		newDiv.style.left = 0;
+		newDiv.style.height = 100 + "px";
+		newDiv.style.width = this.width / 2 + "px";
+		newDiv.style.background = "blue";
+		newDiv.onclick = () => {this.toggle()};
+		this.shadow.appendChild(newDiv);
+
+		// create select
+		this.sel = document.createElement("select");
+		this.sel.style.position = "absolute";
+		this.sel.style.top = this.height - 50 + "px";
+		this.sel.style.left = this.width - 50 + "px";
+		this.sel.onchange = (o) => {this.targetName = o.target.value;};
+		this.shadow.appendChild(this.sel);
   }
 
 
@@ -597,12 +623,6 @@ class SEQU extends HTMLElement {
     for (let i = 0; i < this.sliders.length; i++) {
       f(this.sliders[i]); 
     } 
-  }
-
-  set duration(d) {
-  }
-
-  get duration() {
   }
 
   set stepTime(t) {
@@ -618,10 +638,6 @@ class SEQU extends HTMLElement {
   }
 
   connect(instrument) {
-    // this is an interesting challenge
-    // maybe inspect instrument to see the number of voices
-    //    => way better idea, abstract voices away from the sequencer!!!
-    // hold on to instrument, to access frequency and gateOn
   }
 
   toggle() {
@@ -630,22 +646,12 @@ class SEQU extends HTMLElement {
 
   start() {
     console.log(this.name, "started");
+		assert(this.targetName != undefined, "trying to start sequencer with no target");
     this.currIndex  = 0;
     this.on         = true;
     this.timer      = window.setInterval(() => {
-      // this is the old way it workds
-      // this.steps[this.currIndex].gateOn();
-      // 
-      // figure out where the gateOn needs to be sent!!
-      // there maybe could be a monophonic instrument, in which case:
-      //  - frequency gets updated
-      //  - gate on sent to instrument
-      // there could be a polyphonoic instrument, in which case:
-      //  - figure out how to cycle through available oscillators
-
-      //  WAY BETTER IDEA: abstract voices from sequencer
-      //  => the instrument offers a gateOn method (and maybe even one with a frequency included)
-      //     and it handles the rest
+			// send noteon to handler
+			h.noteon(this.targetName, this.sliders[this.currIndex].value, this.duration);
       this.currIndex++;
       this.currIndex %= this.numSteps;
     }, this.stepTime);
@@ -657,11 +663,60 @@ class SEQU extends HTMLElement {
     this.on = false;
     window.clearInterval(this.timer);
   }
+
+	displayInstrument(name) {
+		this.targetName = name;
+		let opt = document.createElement("option");
+		opt.innerHTML = name;
+		opt.value = name;
+		this.sel.appendChild(opt);
+	}
+
+	removeInstrument(name) {
+	}
 }
 
 customElements.define('step-sequence', SEQU);
 
+/**
+	* FMElement
+	*
+	* a graphical interface for an FM inst
+	*
+	*/
+class FMELEM extends HTMLElement {
+  constructor() {
+    super();
+    this.shadow  = this.attachShadow({mode: "open"});
+    this.on      = false;
+		this.h			 = h;
+		this.name    = h.newFM();
+  }
 
+  connectedCallback() {
+    this.cont      = this.parentNode;
+    this.height    = this.cont.clientHeight;
+    this.width     = this.cont.clientWidth;
+		
+		// name and buttons and things I suppose
+		let newDiv = document.createElement("div");
+		newDiv.style.position = "absolute";
+		newDiv.style.top = "50%";
+		newDiv.style.left = "50%";
+		newDiv.style.transform = "translate(-50%, -50%)";
+		newDiv.innerHTML = "FM";
+		this.shadow.appendChild(newDiv);
+
+		// tell all sequencers to display name
+		let sequencers = document.getElementsByClassName("sequencer");
+		for (var i = 0; i < sequencers.length; i ++) {
+			sequencers[i].displayInstrument(this.name);
+		}
+	}
+}
+  
+
+customElements.define('fm-elem', FMELEM);
 
 /*
 export { MIDI_FREQS, a, scale, midiToFrequency, assert,
