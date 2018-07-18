@@ -402,6 +402,62 @@ class FM extends MONO {
 }
 
 
+/**
+  * instrument_handler.js
+  *
+  * holds on to instruments
+  * receives and sends messages to communicate with other modules
+  *
+  **/
+
+class Handler {
+  constructor() {
+    this.ctx = new (self.AudioContext || self.webkitAudioContext);
+    this.instruments = [];
+  }
+
+  newFM() {
+    let newFM = new FM(this.ctx);
+    let name = "FM" + this.instruments.length;
+    this.instruments.push({"name" : name, "inst" : newFM});
+    return name;
+  }
+
+  noteon(name) {
+    let i = this.find(name);
+    assert(i != false, "couldn't find inst for noteon");
+    i.gateOn();
+  }
+
+  noteon(name, frequency) {
+    let i = this.find(name);
+    assert(i != false, "couldn't find inst for noteon");
+    i.gateOn(frequency);
+  }
+
+  noteon(name, frequency, duration) {
+    let i = this.find(name);
+    assert(i != false, "couldn't find inst for noteon");
+    i.gateOn(frequency, duration);
+  }
+
+  // returns the 'inst'
+  find(name) {
+    let found = false;
+    mapInstruments((i) => {
+      if (i.name == name) {
+        found = i.inst;
+      }
+    });
+    return found;
+  }
+
+  mapInstruments(f) {
+    for (var i = 0; i < this.instruments.length; i++) {
+      f(this.instruments[i]); 
+    }
+  }
+}
 
 /**
   * HTML elements
@@ -644,6 +700,9 @@ class SEQU extends HTMLElement {
 
 customElements.define('step-sequence', SEQU);
 
-export { MIDI_FREQS, a, scale, midiToFrequency,
+
+
+
+export { MIDI_FREQS, a, scale, midiToFrequency, assert,
          VCO, VCA, VCF, ADSR, MODU, INST, MONO, 
-         FM, VSlider, SEQU};
+         FM, VSlider, SEQU, Handler};
