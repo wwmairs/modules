@@ -90,6 +90,7 @@ class VCA {
         return this.gain.gain.value;
     }
 
+
     connect(module) {
         if (module.hasOwnProperty('input')) {
             this.output.connect(module.input);
@@ -208,6 +209,12 @@ class ADSR {
       this.param.linearRampToValueAtTime(this.sustainValue, now + this.attack + this.decay);
       this.param.linearRampToValueAtTime(0, now + this.attack + this.decay + d + this.release);
     }
+
+		off() {
+			let now = this.context.currentTime;
+			this.param.setValueAtTime(0, now);
+			this.param.cancelScheduledValues(now);
+		}
 
     // unlike other modules, this one connects to an AudioParam, 
     // rather than either a module or an AudioNode
@@ -349,6 +356,10 @@ class MONO extends INST {
 		this.env.gateOn(d);
 	}
 
+	off() {
+		this.env.off();
+	}
+
 	connect(module) {
 		if (module.hasOwnProperty('input')) {
 			this.output.connect(module.input);
@@ -416,6 +427,12 @@ class Handler {
     i.gateOn(frequency, duration);
   }
 
+	off(name) {
+		let i = this.find(name);
+    assert(i != false, "couldn't find inst for off");
+		i.off();
+	}
+
   // returns the 'inst'
   find(name) {
     let found = false;
@@ -450,6 +467,8 @@ class VSlider extends HTMLElement {
   constructor() {
     super();
     this.shadow = this.attachShadow({mode: "open"});
+		this.min = 48;
+		this.max = 72;
   }
 
   connectedCallback() {
@@ -502,11 +521,15 @@ class VSlider extends HTMLElement {
       if ((newPos <= that.offsetTop + that.offsetHeight - 10) &&
           (newPos >= that.offsetTop)) {
         that.slider.style.top = newPos + "px";
-        that.updateCallback(that.value);
+				// continuous updating
+        //that.updateCallback(that.value);
       }
     }
 
     function endDrag() {
+			// updating only on mouse up
+			//console.log(that.updateCallback);
+      that.updateCallback(that.value);
       document.onmouseup   = null;
       document.onmousemove = null;
     }
@@ -533,10 +556,14 @@ class VSlider extends HTMLElement {
     this.style.width = w + "px";
   }
 
+	set onUpdate(f) {
+		this.updateCallback = f;
+	}
+
   get value() {
     return Math.round(scale(this.slider.offsetTop, this.offsetTop,
                             this.offsetTop + this.offsetHeight - this.sliderHeight,
-                            48, 72));
+                            this.min, this.max));
 
   }
 }
@@ -561,7 +588,8 @@ class SEQU extends HTMLElement {
   }
 
   connectedCallback() {
-    this.durration = 100;
+		this.currIndex = 0;
+    this.duration  = 100;
     this.stepTime  = 250;
     this.cont      = this.parentNode;
     this.height    = this.cont.clientHeight;
@@ -595,7 +623,7 @@ class SEQU extends HTMLElement {
       xPos += stepWidth;
     }
 
-		// create button
+		// create button for on / off
 		let newDiv = document.createElement("div");
 		newDiv.style.position = "absolute";
 		newDiv.style.top = this.height - 100 + "px";
@@ -605,6 +633,35 @@ class SEQU extends HTMLElement {
 		newDiv.style.background = "blue";
 		newDiv.onclick = () => {this.toggle()};
 		this.shadow.appendChild(newDiv);
+
+		// sliders for duration, stepTime
+		newDiv = document.createElement("div");
+		newDiv.style.position = "absolute";
+		newDiv.style.top = this.height - 100 + "px";
+		newDiv.style.left = this.width / 2 + "px";
+		newDiv.style.height = 100 + "px";
+		newDiv.style.width = 100 + "px";
+		this.durationSlider = document.createElement("vertical-slider");
+		// setup updateCallback for slider
+		this.durationSlider.min = 1;
+		this.durationSlider.max = 500;
+		newDiv.appendChild(this.durationSlider);
+		this.shadow.appendChild(newDiv);
+		//this.durationSlider.onUpdate = (v) => {console.log('duration:', v); this.duration = v};
+
+		newDiv = document.createElement("div");
+		newDiv.style.position = "absolute";
+		newDiv.style.top = this.height - 100 + "px";
+		newDiv.style.left = this.width / 2 + 100 + "px";
+		newDiv.style.height = 100 + "px";
+		newDiv.style.width = 100 + "px";
+		this.stepTimeSlider = document.createElement("vertical-slider");
+		// setup updateCallback for slider
+		this.stepTimeSlider.min = 1;
+		this.stepTimeSlider.max = 500;
+		newDiv.appendChild(this.stepTimeSlider);
+		this.shadow.appendChild(newDiv);
+		this.stepTimeSlider.onUpdate = (v) => {console.log('stepTime:', v); this.stepTime = v};
 
 		// create select
 		this.sel = document.createElement("select");
@@ -625,10 +682,20 @@ class SEQU extends HTMLElement {
     } 
   }
 
+	set duration(d) {
+		this.d = d;
+		if (this.on) {
+			this.start();
+		}
+	}
+
+	get duration() {
+		return this.d;
+	}
+
   set stepTime(t) {
     this.st = t;
     if (this.on) {
-      this.stop();
       this.start();
     }
   }
@@ -637,21 +704,25 @@ class SEQU extends HTMLElement {
     return this.st;
   }
 
-  connect(instrument) {
-  }
-
   toggle() {
     this.on ? this.stop() : this.start();
   }
 
+	restart() {
+    this.currIndex  = 0;
+		this.start();
+	}
+
   start() {
     console.log(this.name, "started");
+    window.clearInterval(this.timer);
 		assert(this.targetName != undefined, "trying to start sequencer with no target");
-    this.currIndex  = 0;
     this.on         = true;
     this.timer      = window.setInterval(() => {
 			// send noteon to handler
-			h.noteon(this.targetName, this.sliders[this.currIndex].value, this.duration);
+			h.noteon(this.targetName, 
+							 midiToFrequency(this.sliders[this.currIndex].value), 
+							 this.duration);
       this.currIndex++;
       this.currIndex %= this.numSteps;
     }, this.stepTime);
@@ -660,8 +731,10 @@ class SEQU extends HTMLElement {
 
   stop() {
     console.log(this.name, "stopped");
+		assert(this.targetName != undefined, "trying to stop sequencer with no target");
     this.on = false;
     window.clearInterval(this.timer);
+		h.off(this.targetName);
   }
 
 	displayInstrument(name) {
