@@ -392,7 +392,6 @@ class FM extends MONO {
 
 	gateOn(f = false, d = false) {
 		if (f) {
-			console.log(this.modFactor);
 			this.modulator.frequency = f / this.modFactor;
 			this.frequency = f;
 		}
@@ -404,7 +403,6 @@ class FM extends MONO {
 	}
 
 	set modFactor(f) {
-		console.log("setting modFactor", f);
 		this.mf = f;
 	}
 }
@@ -733,17 +731,11 @@ class SEQU extends HTMLElement {
 	}
 
   start() {
-    console.log(this.name, "started");
     window.clearInterval(this.timer);
 		assert(this.targetName != undefined, "trying to start sequencer with no target");
     this.on         = true;
     this.timer      = window.setInterval(() => {
 			// send noteon to handler
-			/*
-			h.noteon(this.targetName, 
-							 midiToFrequency(this.sliders[this.currIndex].value), 
-							 this.duration);
-			*/
 			h.noteon(this.targetName,
 							 midiToFrequency(this.sliders[this.currIndex].value),
 							 this.duration);
@@ -754,11 +746,9 @@ class SEQU extends HTMLElement {
   }
 
   stop() {
-    console.log(this.name, "stopped");
-		//assert(this.targetName != undefined, "trying to stop sequencer with no target");
+		assert(this.targetName != undefined, "trying to stop sequencer with no target");
     this.on = false;
     window.clearInterval(this.timer);
-		//h.off(this.targetName);
   }
 
 	displayInstrument(name) {
