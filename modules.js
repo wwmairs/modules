@@ -831,6 +831,7 @@ class FMELEM extends HTMLElement {
 		this.shadow.appendChild(newDiv);
 		this.modSlider.onUpdate = (v) => {h.mod(this.name, v)};
 
+		// at some point it might be good to abstract this away, some adsr html element
 		// controls for amplitude adsr
 		// attack
 		newDiv = document.createElement("div");
@@ -895,9 +896,3 @@ class FMELEM extends HTMLElement {
   
 
 customElements.define('fm-elem', FMELEM);
-
-/*
-export { MIDI_FREQS, a, scale, midiToFrequency, assert,
-         VCO, VCA, VCF, ADSR, MODU, INST, MONO, 
-         FM, VSlider, SEQU, Handler};
-*/
