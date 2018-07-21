@@ -387,14 +387,25 @@ class FM extends MONO {
         super(_ctx);
         this.modulator = new MODU(this.ctx);
         this.modulator.connect(this.frequencyParam);
+				this.modFactor = 4;
     }
 
 	gateOn(f = false, d = false) {
 		if (f) {
-			this.modulator.frequency = f * 4;
+			console.log(this.modFactor);
+			this.modulator.frequency = f / this.modFactor;
 			this.frequency = f;
 		}
 		this.env.gateOn(d);
+	}
+
+	get modFactor() {
+		return this.mf;
+	}
+
+	set modFactor(f) {
+		console.log("setting modFactor", f);
+		this.mf = f;
 	}
 }
 
@@ -426,6 +437,14 @@ class Handler {
     assert(i != false, "couldn't find inst for noteon");
     i.gateOn(frequency, duration);
   }
+
+	mod(name, f) {
+    let i = this.find(name);
+    assert(i != false, "couldn't find inst for mod");
+		assert(i.hasOwnProperty("modulator"), "trying to call mod on inst" + 
+																					i + "which has no modulator");
+		i.modFactor = f;
+	}
 
 	off(name) {
 		let i = this.find(name);
@@ -647,7 +666,7 @@ class SEQU extends HTMLElement {
 		this.durationSlider.max = 1;
 		newDiv.appendChild(this.durationSlider);
 		this.shadow.appendChild(newDiv);
-		//this.durationSlider.onUpdate = (v) => {console.log('duration:', v); this.duration = v};
+		this.durationSlider.onUpdate = (v) => {console.log('duration:', v); this.duration = v};
 
 		newDiv = document.createElement("div");
 		newDiv.style.position = "absolute";
@@ -779,11 +798,25 @@ class FMELEM extends HTMLElement {
 		// name and buttons and things I suppose
 		let newDiv = document.createElement("div");
 		newDiv.style.position = "absolute";
-		newDiv.style.top = "50%";
 		newDiv.style.left = "50%";
-		newDiv.style.transform = "translate(-50%, -50%)";
+		newDiv.style.transform = "translateX(-50%)";
 		newDiv.innerHTML = "FM";
 		this.shadow.appendChild(newDiv);
+		// slider for modulating
+		newDiv = document.createElement("div");
+		newDiv.style.position = "absolute";
+		newDiv.style.left = "0";	
+		newDiv.style.top = "20px";
+		newDiv.style.width = "100px";
+		newDiv.style.height = "200px"	
+		this.modSlider = document.createElement("vertical-slider");
+		this.modSlider.min = 0;
+		this.modSlider.max = 127;
+		newDiv.appendChild(this.modSlider);
+		this.shadow.appendChild(newDiv);
+		this.modSlider.onUpdate = (v) => {h.mod(this.name, v)};
+
+		// controls for env
 
 		// tell all sequencers to display name
 		let sequencers = document.getElementsByClassName("sequencer");
