@@ -444,6 +444,32 @@ class Handler {
 		i.modFactor = f;
 	}
 
+	// handling amplitude adsr
+	ampA(name, v) {
+    let i = this.find(name);
+    assert(i != false, "couldn't find inst for ampA");
+		i.env.attack = v;
+	}
+
+	ampD(name, v) {
+    let i = this.find(name);
+    assert(i != false, "couldn't find inst for ampD");
+		i.env.decay = v;
+	}
+
+	ampS(name, v) {
+    let i = this.find(name);
+    assert(i != false, "couldn't find inst for ampS");
+		console.log("handler setting sustain to", v);
+		i.env.sustain = v;
+	}
+
+	ampR(name, v) {
+    let i = this.find(name);
+    assert(i != false, "couldn't find inst for ampR");
+		i.env.release = v;
+	}
+
 	off(name) {
 		let i = this.find(name);
     assert(i != false, "couldn't find inst for off");
@@ -504,7 +530,7 @@ class VSlider extends HTMLElement {
       let target_string = this.getAttribute("targetf");
       this.updateCallback = (v) => {
         let t = eval(target_string);
-        t.frequency = midiToFrequency(v);
+        t.frequency = midiToFrequency(Math.round(v));
       };
     } else {
       this.updateCallback = (v) => v;
@@ -577,12 +603,11 @@ class VSlider extends HTMLElement {
 		this.updateCallback = f;
 	}
 
-  get value() {
-    return Math.round(scale(this.slider.offsetTop, this.offsetTop,
-                            this.offsetTop + this.offsetHeight - this.sliderHeight,
-                            this.min, this.max));
-
-  }
+	get value() {
+    return scale(this.slider.offsetTop, this.offsetTop,
+                 this.offsetTop + this.offsetHeight - this.sliderHeight,
+                 this.min, this.max);
+	}
 }
 
 customElements.define('vertical-slider', VSlider);
@@ -737,7 +762,7 @@ class SEQU extends HTMLElement {
     this.timer      = window.setInterval(() => {
 			// send noteon to handler
 			h.noteon(this.targetName,
-							 midiToFrequency(this.sliders[this.currIndex].value),
+							 midiToFrequency(Math.round(this.sliders[this.currIndex].value)),
 							 this.duration);
       this.currIndex++;
       this.currIndex %= this.numSteps;
@@ -806,7 +831,59 @@ class FMELEM extends HTMLElement {
 		this.shadow.appendChild(newDiv);
 		this.modSlider.onUpdate = (v) => {h.mod(this.name, v)};
 
-		// controls for env
+		// controls for amplitude adsr
+		// attack
+		newDiv = document.createElement("div");
+		newDiv.style.position = "absolute";
+		newDiv.style.left = "0";	
+		newDiv.style.top = "230px";
+		newDiv.style.width = "100px";
+		newDiv.style.height = "100px"	
+		this.ampASlider = document.createElement("vertical-slider");
+		this.ampASlider.min = 0;
+		this.ampASlider.max = 1;
+		newDiv.appendChild(this.ampASlider);
+		this.shadow.appendChild(newDiv);
+		this.ampASlider.onUpdate = (v) => {h.ampA(this.name, v)};
+		// decay
+		newDiv = document.createElement("div");
+		newDiv.style.position = "absolute";
+		newDiv.style.left = "100px";	
+		newDiv.style.top = "230px";
+		newDiv.style.width = "100px";
+		newDiv.style.height = "100px"	
+		this.ampDSlider = document.createElement("vertical-slider");
+		this.ampDSlider.min = 0;
+		this.ampDSlider.max = 1;
+		newDiv.appendChild(this.ampDSlider);
+		this.shadow.appendChild(newDiv);
+		this.ampDSlider.onUpdate = (v) => {h.ampD(this.name, v)};
+		// sustain
+		newDiv = document.createElement("div");
+		newDiv.style.position = "absolute";
+		newDiv.style.left = "200px";	
+		newDiv.style.top = "230px";
+		newDiv.style.width = "100px";
+		newDiv.style.height = "100px"	
+		this.ampSSlider = document.createElement("vertical-slider");
+		this.ampSSlider.min = 0;
+		this.ampSSlider.max = 1;
+		newDiv.appendChild(this.ampSSlider);
+		this.shadow.appendChild(newDiv);
+		this.ampSSlider.onUpdate = (v) => {h.ampS(this.name, v)};
+		// release
+		newDiv = document.createElement("div");
+		newDiv.style.position = "absolute";
+		newDiv.style.left = "300px";	
+		newDiv.style.top = "230px";
+		newDiv.style.width = "100px";
+		newDiv.style.height = "100px"	
+		this.ampRSlider = document.createElement("vertical-slider");
+		this.ampRSlider.min = 0;
+		this.ampRSlider.max = 1;
+		newDiv.appendChild(this.ampRSlider);
+		this.shadow.appendChild(newDiv);
+		this.ampRSlider.onUpdate = (v) => {h.ampR(this.name, v)};
 
 		// tell all sequencers to display name
 		let sequencers = document.getElementsByClassName("sequencer");
