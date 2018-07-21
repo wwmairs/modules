@@ -589,7 +589,7 @@ class SEQU extends HTMLElement {
 
   connectedCallback() {
 		this.currIndex = 0;
-    this.duration  = 100;
+    this.duration  = .25;
     this.stepTime  = 250;
     this.cont      = this.parentNode;
     this.height    = this.cont.clientHeight;
@@ -643,8 +643,8 @@ class SEQU extends HTMLElement {
 		newDiv.style.width = 100 + "px";
 		this.durationSlider = document.createElement("vertical-slider");
 		// setup updateCallback for slider
-		this.durationSlider.min = 1;
-		this.durationSlider.max = 500;
+		this.durationSlider.min = .01;
+		this.durationSlider.max = 1;
 		newDiv.appendChild(this.durationSlider);
 		this.shadow.appendChild(newDiv);
 		//this.durationSlider.onUpdate = (v) => {console.log('duration:', v); this.duration = v};
@@ -720,8 +720,13 @@ class SEQU extends HTMLElement {
     this.on         = true;
     this.timer      = window.setInterval(() => {
 			// send noteon to handler
+			/*
 			h.noteon(this.targetName, 
 							 midiToFrequency(this.sliders[this.currIndex].value), 
+							 this.duration);
+			*/
+			h.noteon(this.targetName,
+							 midiToFrequency(this.sliders[this.currIndex].value),
 							 this.duration);
       this.currIndex++;
       this.currIndex %= this.numSteps;
@@ -731,10 +736,10 @@ class SEQU extends HTMLElement {
 
   stop() {
     console.log(this.name, "stopped");
-		assert(this.targetName != undefined, "trying to stop sequencer with no target");
+		//assert(this.targetName != undefined, "trying to stop sequencer with no target");
     this.on = false;
     window.clearInterval(this.timer);
-		h.off(this.targetName);
+		//h.off(this.targetName);
   }
 
 	displayInstrument(name) {
