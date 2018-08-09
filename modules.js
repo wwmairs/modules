@@ -369,6 +369,65 @@ class MONO extends INST {
 	}
 }
 
+class POLY extends INST {
+	constructor(_ctx) {
+		super(_ctx);
+		this.numVoices = 0;
+		this.currVoice = 0;
+		this.vcos 		 = [];
+		this.vcas			 = [];
+
+		//this.vco    = new  VCO(this.ctx);
+		//this.vca    = new  VCA(this.ctx);
+		this.env    = new ADSR(this.ctx);
+		this.input 	= this.vco;
+		this.output = this.vca;
+		this.frequencyParam = this.vco.frequencyParam;
+		this.newOscillators(8);
+
+		// connecting things up	
+		//this.vco.connect(this.vca);
+		this.env.connect(this.vca.amplitudeParam);
+	  // vca needs to be connected to something
+	}
+
+	newOscillators(num) {
+		this.numVoices += num;
+		for (var i = 0; i < num; i++) {
+			let newVCO = new VCO(this.ctx);
+			newVCO.connect(this.vca);
+			this.oscillators.push(newVCO);
+		}
+	}
+
+	// TODO: fix this for poly
+	set frequency(f) {
+		this.vco.frequency = f;
+	}
+
+	// TODO: fix this for poly
+	gateOn(f = false, d = false) {
+		if (f) {
+			this.frequency = f;
+		}
+		this.env.gateOn(d);
+	}
+
+	// TODO: fix this for poly
+	off() {
+		this.env.off();
+	}
+
+	// TODO: fix this for poly
+	connect(module) {
+		if (module.hasOwnProperty('input')) {
+			this.output.connect(module.input);
+		} else {
+			this.output.connect(module);
+		}
+	}
+}
+
 /**
   * fm.js
   *
@@ -382,7 +441,7 @@ class MONO extends INST {
   *
   **/
 
-class FM extends MONO {
+class FM extends POLY {
     constructor(_ctx) {
         super(_ctx);
         this.modulator = new MODU(this.ctx);
@@ -893,6 +952,11 @@ class FMELEM extends HTMLElement {
 		}
 	}
 }
+
+/**
+	* oscilloscope
+	*
+	**/
   
 
 customElements.define('fm-elem', FMELEM);
