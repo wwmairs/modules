@@ -510,6 +510,30 @@ class FM extends POLY {
 	set modFactor(f) {
 		this.mf = f;
 	}
+
+	set ampAttack(a) {
+		this.mapENVS((env) => {
+			env.attack = a;
+		});
+	}
+
+	set ampDecay(d) {
+		this.mapENVS((env) => {
+			env.decay = d;
+		});
+	}
+
+	set ampSustain(s) {
+		this.mapENVS((env) => {
+			env.sustain = s;
+		});
+	}
+
+	set ampRelease(r) {
+		this.mapENVS((env) => {
+			env.release = r;
+		});
+	}
 }
 
 
@@ -553,26 +577,26 @@ class Handler {
 	ampA(name, v) {
     let i = this.find(name);
     assert(i != false, "couldn't find inst for ampA");
-		i.env.attack = v;
+		i.ampAttack = v;
 	}
 
 	ampD(name, v) {
     let i = this.find(name);
     assert(i != false, "couldn't find inst for ampD");
-		i.env.decay = v;
+		i.ampDecay = v;
 	}
 
 	ampS(name, v) {
     let i = this.find(name);
     assert(i != false, "couldn't find inst for ampS");
 		console.log("handler setting sustain to", v);
-		i.env.sustain = v;
+		i.ampSustain = v;
 	}
 
 	ampR(name, v) {
     let i = this.find(name);
     assert(i != false, "couldn't find inst for ampR");
-		i.env.release = v;
+		i.ampRelease = v;
 	}
 
 	off(name) {
@@ -896,7 +920,7 @@ class SEQU extends HTMLElement {
 customElements.define('step-sequence', SEQU);
 
 /**
-	* FMElement
+	* FMELEM
 	*
 	* a graphical interface for an FM inst
 	*
@@ -935,6 +959,20 @@ class FMELEM extends HTMLElement {
 		newDiv.appendChild(this.modSlider);
 		this.shadow.appendChild(newDiv);
 		this.modSlider.onUpdate = (v) => {h.mod(this.name, v)};
+
+		// oscilloscope
+		newDiv = document.createElement("div");
+		newDiv.style.position = "absolute";
+		newDiv.style.right = "0";	
+		newDiv.style.top = "20px";
+		newDiv.style.width = "200px";
+		newDiv.style.height = "200px"	
+		this.oscilloscope = document.createElement("o-scope");
+		newDiv.appendChild(this.oscilloscope);
+		this.shadow.appendChild(newDiv);
+		// connect o-scope
+		this.h.find(this.name).mapVCAS((vca) => {this.oscilloscope.connectTo(vca)});
+		
 
 		// at some point it might be good to abstract this away, some adsr html element
 		// controls for amplitude adsr
@@ -999,10 +1037,80 @@ class FMELEM extends HTMLElement {
 	}
 }
 
+
+customElements.define('fm-elem', FMELEM);
+
+
 /**
-	* oscilloscope
+	* OSC
+	*
+	* an oscilloscope
+	* cleverness from:
+	* https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API/Visualizations_with_Web_Audio_API
 	*
 	**/
   
+class OSC extends HTMLElement {
+  constructor() {
+    super();
+    this.shadow   = this.attachShadow({mode: "open"});
+		this.h			  = h;
+		this.analyser = h.ctx.createAnalyser();
+		this.analyser.fftSize = 2048;
+		this.bufferLength = this.analyser.frequencyBinCount;
+		this.dataArray = new Uint8Array(this.bufferLength);
+  }
 
-customElements.define('fm-elem', FMELEM);
+  connectedCallback() {
+    this.cont      = this.parentNode;
+    this.height    = this.cont.clientHeight;
+    this.width     = this.cont.clientWidth;
+		this.canvas = document.createElement("canvas");
+		this.canvas.setAttribute("height", this.height);
+		this.canvas.setAttribute("width", this.width);
+		this.shadow.appendChild(this.canvas);
+		this.canvasCtx = this.canvas.getContext('2d');
+		this.canvasCtx.clearRect(0, 0, this.width, this.height);
+
+		this.draw();
+	}
+
+	draw() {
+		// I am very curious about the scoping issues that cause this
+		// this.drawVisual = requestAnimationFrame(this.draw) works once and then
+		// 'this' is undefined
+		// this encapsulates the 'this'
+		this.drawVisual = requestAnimationFrame(() => {this.draw.call(this)});
+		this.analyser.getByteTimeDomainData(this.dataArray);
+		this.canvasCtx.fillStyle = 'rgb(200, 200, 200)';
+		this.canvasCtx.fillRect(0, 0, this.width, this.height);
+		this.canvasCtx.lineWidth = 2;
+		this.canvasCtx.strokeStyle = 'rgb(0, 0, 0)';
+		this.canvasCtx.beginPath();
+		var sliceWidth = this.width * 1.0 / this.bufferLength;
+		var x = 0;
+		for(var i = 0; i < this.bufferLength; i++) {
+		   
+			var v = this.dataArray[i] / 128.0;
+			var y = v * this.height/2;
+
+			if(i === 0) {
+				this.canvasCtx.moveTo(x, y);
+			} else {
+				this.canvasCtx.lineTo(x, y);
+			}
+
+			x += sliceWidth;
+		}
+		this.canvasCtx.lineTo(this.width, this.height/2);
+		this.canvasCtx.stroke();
+	}
+
+	connectTo(node) {
+		node.connect(this.analyser);	
+	}
+
+}
+
+customElements.define('o-scope', OSC);
+		
