@@ -376,54 +376,97 @@ class POLY extends INST {
 		this.currVoice = 0;
 		this.vcos 		 = [];
 		this.vcas			 = [];
+		this.envs			 = [];
 
 		//this.vco    = new  VCO(this.ctx);
 		//this.vca    = new  VCA(this.ctx);
-		this.env    = new ADSR(this.ctx);
+		//this.env    = new ADSR(this.ctx);
+
+		// these are kinda weird
+		// what does it mean with many voices?
 		this.input 	= this.vco;
 		this.output = this.vca;
-		this.frequencyParam = this.vco.frequencyParam;
+
+		// what happens to this?
+		//this.frequencyParam = this.vco.frequencyParam;
+
 		this.newOscillators(8);
 
 		// connecting things up	
 		//this.vco.connect(this.vca);
-		this.env.connect(this.vca.amplitudeParam);
+		//this.env.connect(this.vca.amplitudeParam);
 	  // vca needs to be connected to something
 	}
+
+  mapVCOS(f) {
+    if (typeof(f) != "function") {
+      throw "trying to mapVCOS but 'f' is of type " + typeof(f);
+    }
+    for (let i = 0; i < this.vcos.length; i++) {
+      f(this.vcos[i]); 
+    } 
+  }
+
+  mapVCAS(f) {
+    if (typeof(f) != "function") {
+      throw "trying to mapVCAS but 'f' is of type " + typeof(f);
+    }
+    for (let i = 0; i < this.vcas.length; i++) {
+      f(this.vcas[i]); 
+    } 
+  }
+
+  mapENVS(f) {
+    if (typeof(f) != "function") {
+      throw "trying to mapENVS but 'f' is of type " + typeof(f);
+    }
+    for (let i = 0; i < this.envs.length; i++) {
+      f(this.envs[i]); 
+    } 
+  }
 
 	newOscillators(num) {
 		this.numVoices += num;
 		for (var i = 0; i < num; i++) {
-			let newVCO = new VCO(this.ctx);
-			newVCO.connect(this.vca);
-			this.oscillators.push(newVCO);
+			let newVCO = new  VCO(this.ctx);
+			let newVCA = new  VCA(this.ctx);
+			let newENV = new ADSR(this.ctx);
+			newVCO.connect(newVCA);
+			newENV.connect(newVCA.amplitudeParam);
+			this.vcos.push(newVCO);
+			this.vcas.push(newVCA);
+			this.envs.push(newENV);
 		}
 	}
 
-	// TODO: fix this for poly
+	// set freq of current voice
 	set frequency(f) {
-		this.vco.frequency = f;
+		this.vcos[this.currVoice].frequency = f;
 	}
 
-	// TODO: fix this for poly
 	gateOn(f = false, d = false) {
 		if (f) {
 			this.frequency = f;
 		}
-		this.env.gateOn(d);
+		this.envs[this.currVoice].gateOn(d);
+		this.currVoice = (this.currVoice + 1) % this.numVoices;
 	}
 
-	// TODO: fix this for poly
 	off() {
-		this.env.off();
+		this.mapENVS( (env) => {
+			env.off();
+		});
 	}
 
-	// TODO: fix this for poly
 	connect(module) {
 		if (module.hasOwnProperty('input')) {
-			this.output.connect(module.input);
+			for (var i = 0; i < this.vcas.length; i++) {
+				this.vcas[i].connect(module.input);
+			}
 		} else {
-			this.output.connect(module);
+			for (var i = 0; i < this.vcas.length; i++) {
+				this.vcas[i].connect(module);
+			}
 		}
 	}
 }
@@ -445,7 +488,9 @@ class FM extends POLY {
     constructor(_ctx) {
         super(_ctx);
         this.modulator = new MODU(this.ctx);
-        this.modulator.connect(this.frequencyParam);
+				this.mapVCOS((vco) => {
+					this.modulator.connect(vco.frequencyParam);
+				});
 				this.modFactor = 4;
     }
 
@@ -454,7 +499,8 @@ class FM extends POLY {
 			this.modulator.frequency = f / this.modFactor;
 			this.frequency = f;
 		}
-		this.env.gateOn(d);
+		// does this work?
+		super.gateOn(f, d);
 	}
 
 	get modFactor() {
