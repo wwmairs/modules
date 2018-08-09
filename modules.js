@@ -742,6 +742,61 @@ class VSlider extends HTMLElement {
 customElements.define('vertical-slider', VSlider);
 
 /**
+	* VSliders
+	* 
+	* a bank of vertical sliders
+	* good for an adsr
+	* or other things
+	**/
+
+
+class VSliders extends HTMLElement {
+	constructor() {
+		super();
+		this.sliders = [];
+		this.numSliders = 4;
+		this.shadow = this.attachShadow({mode: "open"});
+	}
+
+	connectedCallback() {
+		this.cont   = this.parentNode;
+		this.height = this.cont.clientHeight;
+		this.width  = this.cont.clientWidth;
+    // creating sliders and adding them to shadow
+    var xPos = 0;
+    var stepWidth = this.width / this.numSliders;
+    for (var i = 0; i < this.numSliders; i++) {
+      let newDiv = document.createElement("div"); 
+      newDiv.style.position = "absolute";
+      newDiv.style.top = 0;
+      newDiv.style.left = xPos + "px";
+      newDiv.style.height = this.height + "px";
+      newDiv.style.width = stepWidth + "px";
+
+      let newSlider = document.createElement("vertical-slider");
+      this.sliders.push(newSlider);
+
+      newDiv.appendChild(newSlider);
+      this.shadow.appendChild(newDiv);
+      // this needs to happen after connectedCallback in VSlider  
+      xPos += stepWidth;
+    }
+	}
+
+  mapSliders(f) {
+    if (typeof(f) != "function") {
+      throw "trying to mapSteps but 'f' is of type " + typeof(f);
+    }
+    for (let i = 0; i < this.sliders.length; i++) {
+      f(this.sliders[i]); 
+    } 
+  }
+
+}
+
+customElements.define('vertical-slide-bank', VSliders);
+
+/**
   * sequ.js
   *
   * a sequencer with steps
@@ -981,53 +1036,23 @@ class FMELEM extends HTMLElement {
 		newDiv.style.position = "absolute";
 		newDiv.style.left = "0";	
 		newDiv.style.top = "230px";
-		newDiv.style.width = "100px";
+		newDiv.style.width = "400px";
 		newDiv.style.height = "100px"	
-		this.ampASlider = document.createElement("vertical-slider");
-		this.ampASlider.min = 0;
-		this.ampASlider.max = 1;
-		newDiv.appendChild(this.ampASlider);
+		this.ADSRbank = document.createElement("vertical-slide-bank");
+		newDiv.appendChild(this.ADSRbank);
 		this.shadow.appendChild(newDiv);
-		this.ampASlider.onUpdate = (v) => {h.ampA(this.name, v)};
+		this.ADSRbank.mapSliders((s) => {
+			s.min = 0;
+			s.max = 1;
+		});
+		// attack
+		this.ADSRbank.sliders[0].onUpdate = (v) => {h.ampA(this.name, v)};
 		// decay
-		newDiv = document.createElement("div");
-		newDiv.style.position = "absolute";
-		newDiv.style.left = "100px";	
-		newDiv.style.top = "230px";
-		newDiv.style.width = "100px";
-		newDiv.style.height = "100px"	
-		this.ampDSlider = document.createElement("vertical-slider");
-		this.ampDSlider.min = 0;
-		this.ampDSlider.max = 1;
-		newDiv.appendChild(this.ampDSlider);
-		this.shadow.appendChild(newDiv);
-		this.ampDSlider.onUpdate = (v) => {h.ampD(this.name, v)};
+		this.ADSRbank.sliders[1].onUpdate = (v) => {h.ampD(this.name, v)};
 		// sustain
-		newDiv = document.createElement("div");
-		newDiv.style.position = "absolute";
-		newDiv.style.left = "200px";	
-		newDiv.style.top = "230px";
-		newDiv.style.width = "100px";
-		newDiv.style.height = "100px"	
-		this.ampSSlider = document.createElement("vertical-slider");
-		this.ampSSlider.min = 0;
-		this.ampSSlider.max = 1;
-		newDiv.appendChild(this.ampSSlider);
-		this.shadow.appendChild(newDiv);
-		this.ampSSlider.onUpdate = (v) => {h.ampS(this.name, v)};
+		this.ADSRbank.sliders[2].onUpdate = (v) => {h.ampS(this.name, v)};
 		// release
-		newDiv = document.createElement("div");
-		newDiv.style.position = "absolute";
-		newDiv.style.left = "300px";	
-		newDiv.style.top = "230px";
-		newDiv.style.width = "100px";
-		newDiv.style.height = "100px"	
-		this.ampRSlider = document.createElement("vertical-slider");
-		this.ampRSlider.min = 0;
-		this.ampRSlider.max = 1;
-		newDiv.appendChild(this.ampRSlider);
-		this.shadow.appendChild(newDiv);
-		this.ampRSlider.onUpdate = (v) => {h.ampR(this.name, v)};
+		this.ADSRbank.sliders[3].onUpdate = (v) => {h.ampR(this.name, v)};
 
 		// tell all sequencers to display name
 		let sequencers = document.getElementsByClassName("sequencer");
