@@ -500,6 +500,8 @@ class FM extends POLY {
 			this.frequency = f;
 		}
 		// does this work?
+		// I think so 
+		// TODO: test new poly FM a lot
 		super.gateOn(f, d);
 	}
 
@@ -1019,9 +1021,9 @@ class FMELEM extends HTMLElement {
 		newDiv = document.createElement("div");
 		newDiv.style.position = "absolute";
 		newDiv.style.right = "0";	
-		newDiv.style.top = "20px";
-		newDiv.style.width = "200px";
-		newDiv.style.height = "200px"	
+		newDiv.style.top = "0px";
+		newDiv.style.width = this.width / 4 + "px";
+		newDiv.style.height = this.height / 2 + "px"	
 		this.oscilloscope = document.createElement("o-scope");
 		newDiv.appendChild(this.oscilloscope);
 		this.shadow.appendChild(newDiv);
