@@ -444,6 +444,12 @@ class POLY extends INST {
 		this.vcos[this.currVoice].frequency = f;
 	}
 
+	set waveForm(w) {
+		this.mapVCOS( (vco) => {
+			vco.waveForm = w;
+		});
+	}
+
 	gateOn(f = false, d = false) {
 		if (f) {
 			this.frequency = f;
@@ -503,6 +509,10 @@ class FM extends POLY {
 		// I think so 
 		// TODO: test new poly FM a lot
 		super.gateOn(f, d);
+	}
+
+	set modWaveform(w) {
+		this.modulator.waveForm = w;	
 	}
 
 	get modFactor() {
@@ -573,6 +583,18 @@ class Handler {
 		assert(i.hasOwnProperty("modulator"), "trying to call mod on inst" + 
 																					i + "which has no modulator");
 		i.modFactor = f;
+	}
+
+	waveForm(name, w) {
+    let i = this.find(name);
+    assert(i != false, "couldn't find inst for waveForm");
+		i.waveForm = w;
+	}
+
+	modWaveForm(name, w) {
+    let i = this.find(name);
+    assert(i != false, "couldn't find inst for modWaveForm");
+		i.modWaveForm = w;
 	}
 
 	// handling amplitude adsr
@@ -1016,6 +1038,42 @@ class FMELEM extends HTMLElement {
 		newDiv.appendChild(this.modSlider);
 		this.shadow.appendChild(newDiv);
 		this.modSlider.onUpdate = (v) => {h.mod(this.name, v)};
+
+		// selects for waveforms of vcos and mod
+		newDiv = document.createElement("div");
+		newDiv.style.position = "absolute";
+		newDiv.style.left = "110px";
+		newDiv.style.top = "20px";
+		this.waveSelect = document.createElement("select");
+		["sine", "square", "sawtooth", "triangle"].map( (type) => {
+			let opt = document.createElement("option");
+			opt.innerHTML = type;
+			opt.value = type;
+			this.waveSelect.appendChild(opt);
+		});
+		this.waveSelect.onchange = (e) => {
+			this.h.waveForm(this.name, e.target.value);
+		}
+		newDiv.appendChild(this.waveSelect);
+		this.shadow.appendChild(newDiv);
+
+		newDiv = document.createElement("div");
+		newDiv.style.position = "absolute";
+		newDiv.style.left = "110px";
+		newDiv.style.top = "40px";
+		this.modWaveSelect = document.createElement("select");
+		["sine", "square", "sawtooth", "triangle"].map( (type) => {
+			let opt = document.createElement("option");
+			opt.innerHTML = type;
+			opt.value = type;
+			this.modWaveSelect.appendChild(opt);
+		});
+		this.modWaveSelect.onchange = (e) => {
+			this.h.modWaveForm(this.name, e.target.value);
+		}
+		newDiv.appendChild(this.modWaveSelect);
+		this.shadow.appendChild(newDiv);
+
 
 		// oscilloscope
 		newDiv = document.createElement("div");
