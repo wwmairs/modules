@@ -112,10 +112,10 @@ class VCF {
         this.biquadFilter   = context.createBiquadFilter();
         this.frequencyParam = this.biquadFilter.frequency;
         // initial values
-        this.type           = "highshelf";
+        this.type           = "lowpass";
         this.frequency      = 800;
         this.Q              = 15;
-				this.gain						= -100;
+				this.gain						= -200;
 				this.env            = new ADSR(context);
 				this.env.connect(this.biquadFilter.gain);
 
@@ -162,6 +162,23 @@ class VCF {
 				this.env.gateOn(d);
 		}
 
+		set attack(v) {
+			this.env.attack = v;
+		}
+
+		set decay(v) {
+			this.env.decay = v;
+		}
+
+		set sustain(v) {
+			console.log("setting filter sustain level to", v);
+			this.env.sustain = v;
+		}
+		
+		set release(v) {
+			this.env.release = v;
+		}
+
 
     // this can connect to either another module, or an AudioNode
     // I wonder how to let it connect to an AudioParam as well
@@ -183,6 +200,8 @@ class ADSR {
         this.decayTime   = 0.05;
         this.sustainValue = .5;
         this.releaseTime = 0.05;
+				this.min = 0;
+				this.max = 1;
     }
 
     set attack(a) {
@@ -213,19 +232,35 @@ class ADSR {
         return this.releaseTime;
     }
 
+		set max(v) {
+			this.maxValue = v;
+		}
+
+		get max() {
+			return this.maxValue;
+		}
+
+		set min(v) {
+			this.minValue = v;
+		}
+		
+		get min() {
+			return this.minValue;
+		}
+
     gateOn(d = 0) {
       let now = this.context.currentTime;
       this.param.cancelScheduledValues(now);
-      this.param.setValueAtTime(0, now);
-      this.param.linearRampToValueAtTime(1, now + this.attack);
+      this.param.setValueAtTime(this.min, now);
+      this.param.linearRampToValueAtTime(this.max, now + this.attack);
       // something different happens if you're holding a note
       this.param.linearRampToValueAtTime(this.sustainValue, now + this.attack + this.decay);
-      this.param.linearRampToValueAtTime(0, now + this.attack + this.decay + d + this.release);
+      this.param.linearRampToValueAtTime(this.min, now + this.attack + this.decay + d + this.release);
     }
 
 		off() {
 			let now = this.context.currentTime;
-			this.param.setValueAtTime(0, now);
+			this.param.setValueAtTime(this.min, now);
 			this.param.cancelScheduledValues(now);
 		}
 
@@ -441,15 +476,19 @@ class POLY extends INST {
 	newOscillators(num) {
 		this.numVoices += num;
 		for (var i = 0; i < num; i++) {
-			let newVCO = new  VCO(this.ctx);
-			let newVCA = new  VCA(this.ctx);
-			let newENV = new ADSR(this.ctx);
-			newVCO.connect(newVCA);
-			newENV.connect(newVCA.amplitudeParam);
-			this.vcos.push(newVCO);
-			this.vcas.push(newVCA);
-			this.envs.push(newENV);
+			this.newOscillator();
 		}
+	}
+
+	newOscillator() {
+		let newVCO = new  VCO(this.ctx);
+		let newVCA = new  VCA(this.ctx);
+		let newENV = new ADSR(this.ctx);
+		newVCO.connect(newVCA);
+		newENV.connect(newVCA.amplitudeParam);
+		this.vcos.push(newVCO);
+		this.vcas.push(newVCA);
+		this.envs.push(newENV);
 	}
 
 	// set freq of current voice
@@ -510,25 +549,39 @@ class POLY extends INST {
   **/
 
 class FM extends POLY {
-    constructor(_ctx) {
-      super(_ctx);
-      this.modulator = new MODU(this.ctx);
-			this.mapVCOS((vco) => {
-				this.modulator.connect(vco.frequencyParam);
-			});
-			this.modFactor = 4;
-			this.filter    = new VCF(this.ctx);
-			this.filterEnv = false;
-			// connect things through the filter
-			this.disconnect();
-			this.mapVCAS( (vca) => {
-				vca.connect(this.filter);
-			});
-    }
+  constructor(_ctx) {
+    super(_ctx);
+		this.modFactor = 4;
+		this.filterEnv = false;
+  }
+
+	newOscillators(n) {
+		this.mods = []
+		this.vcfs = [];
+		super.newOscillators(n);
+	}
+
+	newOscillator() {
+		let newVCO = new  VCO(this.ctx);
+		let newVCA = new  VCA(this.ctx);
+		let newENV = new ADSR(this.ctx);
+		let newVCF = new  VCF(this.ctx);
+		let newMOD = new MODU(this.ctx);
+		newVCO.connect(newVCA);
+		newENV.connect(newVCA.amplitudeParam);
+		newVCA.connect(newVCF);
+		newMOD.connect(newVCO.frequencyParam);
+		newVCF.env.max = -200;
+		this.vcos.push(newVCO);
+		this.vcas.push(newVCA);
+		this.envs.push(newENV);
+		this.vcfs.push(newVCF);
+		this.mods.push(newMOD);
+	}
 
 	gateOn(f = false, d = false) {
 		if (f) {
-			this.modulator.frequency = f / this.modFactor;
+			this.mods[this.currVoice].frequency = f / this.modFactor;
 			this.frequency = f;
 		}
 		if (this.filterEnv) {
@@ -577,15 +630,36 @@ class FM extends POLY {
 	}
 
 	set filterFreq(f) {
-		this.filter.frequency = f;
+		this.vcfs.map((vcf) => {
+			vcf.frequency = f;
+		});
 	}
 
+	set filterAttack(a) {
+		this.filter.attack = a;
+	}
+
+	set filterDecay(d) {
+		this.filter.decay = d;
+	}
+
+	set filterSustain(s) {
+		this.filter.sustain = s;
+	}
+
+	set filterRelease(r) {
+		this.filter.release = r;
+	}
 
 	connect(module) {
 		if (module.hasOwnProperty('input')) {
-			this.filter.connect(module.input);
+			this.vcfs.map((vcf) => {
+				vcf.connect(module.input);
+			});
 		} else {
-			this.filter.connect(module);
+			this.vcfs.map((vcf) => {
+				vcf.connect(module);
+			});
 		}
 	}
 }
@@ -622,8 +696,6 @@ class Handler {
 	mod(name, f) {
     let i = this.find(name);
     assert(i != false, "couldn't find inst for mod");
-		assert(i.hasOwnProperty("modulator"), "trying to call mod on inst" + 
-																					i + "which has no modulator");
 		i.modFactor = f;
 	}
 
@@ -665,17 +737,17 @@ class Handler {
 		i.ampRelease = v;
 	}
 
-	// handling amplitude adsr
-	ampA(name, v) {
+	// handling filter adsr
+	filterA(name, v) {
     let i = this.find(name);
-    assert(i != false, "couldn't find inst for ampA");
-		i.ampAttack = v;
+    assert(i != false, "couldn't find inst for filterA");
+		i.filterAttack = v;
 	}
 
-	ampD(name, v) {
+	filterD(name, v) {
     let i = this.find(name);
-    assert(i != false, "couldn't find inst for ampD");
-		i.ampDecay = v;
+    assert(i != false, "couldn't find inst for filterD");
+		i.filterDecay = v;
 	}
 
 	filterS(name, v) {
@@ -1183,6 +1255,31 @@ class FMELEM extends HTMLElement {
 		this.shadow.appendChild(newDiv);
 		this.filterFreqSlider.onUpdate = (v) => {this.h.find(this.name).filterFreq = v};
 
+		// controls for filter adsr
+		newDiv = document.createElement("div");
+		newDiv.style.position = "absolute";
+		newDiv.style.left = "320px";	
+		newDiv.style.top = "20px";
+		newDiv.style.width = "300px";
+		newDiv.style.height = "100px"	
+		this.filterADSRbank = document.createElement("vertical-slide-bank");
+		newDiv.appendChild(this.filterADSRbank);
+		this.shadow.appendChild(newDiv);
+		this.filterADSRbank.mapSliders((s) => {
+			s.min = 0;
+			s.max = 1;
+		});
+		// attack
+		this.filterADSRbank.sliders[0].onUpdate = (v) => {h.filterA(this.name, v)};
+		// decay
+		this.filterADSRbank.sliders[1].onUpdate = (v) => {h.filterD(this.name, v)};
+		// sustain
+		this.filterADSRbank.sliders[2].min = 0;
+		this.filterADSRbank.sliders[2].max = -200;
+		this.filterADSRbank.sliders[2].onUpdate = (v) => {h.filterS(this.name, v)};
+		// release
+		this.filterADSRbank.sliders[3].onUpdate = (v) => {h.filterR(this.name, v)};
+
 		// oscilloscope
 		newDiv = document.createElement("div");
 		newDiv.style.position = "absolute";
@@ -1197,9 +1294,7 @@ class FMELEM extends HTMLElement {
 		this.oscilloscope.connectTo(this.h.find(this.name));
 		
 
-		// at some point it might be good to abstract this away, some adsr html element
 		// controls for amplitude adsr
-		// attack
 		newDiv = document.createElement("div");
 		newDiv.style.position = "absolute";
 		newDiv.style.left = "0";	
