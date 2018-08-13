@@ -108,9 +108,12 @@ class VCF {
         this.biquadFilter   = context.createBiquadFilter();
         this.frequencyParam = this.biquadFilter.frequency;
         // initial values
-        this.type           = "lowpass";
+        this.type           = "lowshelf";
         this.frequency      = 1000;
         this.Q              = 15;
+				this.gain						= -100;
+				this.env            = new ADSR(context);
+				this.env.connect(this.biquadFilter.gain);
 
         this.input = this.biquadFilter;
         this.output = this.biquadFilter;
@@ -149,6 +152,11 @@ class VCF {
     get gain() {
         return this.biquadFilter.gain.value;
     }
+
+		gateOn(d = false) {
+				this.env.gateOn(d);
+		}
+
 
     // this can connect to either another module, or an AudioNode
     // I wonder how to let it connect to an AudioParam as well
