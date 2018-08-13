@@ -585,7 +585,7 @@ class FM extends POLY {
 			this.frequency = f;
 		}
 		if (this.filterEnv) {
-			this.filter.gateOn(d)
+			this.vcfs[this.currVoice].gateOn(d)
 		}
 		// does this work?
 		// I think so 
@@ -636,19 +636,27 @@ class FM extends POLY {
 	}
 
 	set filterAttack(a) {
-		this.filter.attack = a;
+		this.vcfs.map((vcf) => {
+			vcf.attack = a;
+		});
 	}
 
 	set filterDecay(d) {
-		this.filter.decay = d;
+		this.vcfs.map((vcf) => {
+			vcf.decay = d;
+		});
 	}
 
 	set filterSustain(s) {
-		this.filter.sustain = s;
+		this.vcfs.map((vcf) => {
+			vcf.sustain = s;
+		});
 	}
 
 	set filterRelease(r) {
-		this.filter.release = r;
+		this.vcfs.map((vcf) => {
+			vcf.release = r;
+		});
 	}
 
 	connect(module) {
@@ -1236,7 +1244,9 @@ class FMELEM extends HTMLElement {
 				fm.filterEnv = false;
 				// grey out filter adsr sliders
 			}
-			fm.filter.type = type;
+			fm.vcfs.map((filter) => {
+				filter.type = type;
+			});
 		}
 		newDiv.appendChild(this.filterSelect);
 		this.shadow.appendChild(newDiv);
