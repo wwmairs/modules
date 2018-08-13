@@ -98,6 +98,10 @@ class VCA {
             this.output.connect(module);
         }
     }
+
+		disconnect() {
+			this.output.disconnect();
+		}
 }
 
 // a straightforward vcf
@@ -108,8 +112,8 @@ class VCF {
         this.biquadFilter   = context.createBiquadFilter();
         this.frequencyParam = this.biquadFilter.frequency;
         // initial values
-        this.type           = "lowshelf";
-        this.frequency      = 1000;
+        this.type           = "highshelf";
+        this.frequency      = 800;
         this.Q              = 15;
 				this.gain						= -100;
 				this.env            = new ADSR(context);
@@ -121,6 +125,7 @@ class VCF {
     }
 
     set frequency(f) {
+				console.log("setting filter frequency to", f);
         this.biquadFilter.frequency.setValueAtTime(f, this.context.currentTime);
     }
 
@@ -175,9 +180,9 @@ class ADSR {
     constructor(context) {
         this.context = context;
         this.attackTime  = 0.05;
-        this.decayTime   = 0.1;
+        this.decayTime   = 0.05;
         this.sustainValue = .5;
-        this.releaseTime = 0.6;
+        this.releaseTime = 0.05;
     }
 
     set attack(a) {
@@ -483,6 +488,12 @@ class POLY extends INST {
 			}
 		}
 	}
+
+	disconnect() {
+		this.mapVCAS( (vca) => {
+			vca.disconnect();	
+		});
+	}
 }
 
 /**
@@ -500,18 +511,28 @@ class POLY extends INST {
 
 class FM extends POLY {
     constructor(_ctx) {
-        super(_ctx);
-        this.modulator = new MODU(this.ctx);
-				this.mapVCOS((vco) => {
-					this.modulator.connect(vco.frequencyParam);
-				});
-				this.modFactor = 4;
+      super(_ctx);
+      this.modulator = new MODU(this.ctx);
+			this.mapVCOS((vco) => {
+				this.modulator.connect(vco.frequencyParam);
+			});
+			this.modFactor = 4;
+			this.filter    = new VCF(this.ctx);
+			this.filterEnv = false;
+			// connect things through the filter
+			this.disconnect();
+			this.mapVCAS( (vca) => {
+				vca.connect(this.filter);
+			});
     }
 
 	gateOn(f = false, d = false) {
 		if (f) {
 			this.modulator.frequency = f / this.modFactor;
 			this.frequency = f;
+		}
+		if (this.filterEnv) {
+			this.filter.gateOn(d)
 		}
 		// does this work?
 		// I think so 
@@ -553,6 +574,19 @@ class FM extends POLY {
 		this.mapENVS((env) => {
 			env.release = r;
 		});
+	}
+
+	set filterFreq(f) {
+		this.filter.frequency = f;
+	}
+
+
+	connect(module) {
+		if (module.hasOwnProperty('input')) {
+			this.filter.connect(module.input);
+		} else {
+			this.filter.connect(module);
+		}
 	}
 }
 
@@ -629,6 +663,31 @@ class Handler {
     let i = this.find(name);
     assert(i != false, "couldn't find inst for ampR");
 		i.ampRelease = v;
+	}
+
+	// handling amplitude adsr
+	ampA(name, v) {
+    let i = this.find(name);
+    assert(i != false, "couldn't find inst for ampA");
+		i.ampAttack = v;
+	}
+
+	ampD(name, v) {
+    let i = this.find(name);
+    assert(i != false, "couldn't find inst for ampD");
+		i.ampDecay = v;
+	}
+
+	filterS(name, v) {
+    let i = this.find(name);
+    assert(i != false, "couldn't find inst for filterS");
+		i.filterSustain = v;
+	}
+
+  filterR(name, v) {
+    let i = this.find(name);
+    assert(i != false, "couldn't find inst for filterR");
+		i.filterRelease = v;
 	}
 
 	off(name) {
@@ -1045,7 +1104,7 @@ class FMELEM extends HTMLElement {
 		this.modSlider.max = 127;
 		newDiv.appendChild(this.modSlider);
 		this.shadow.appendChild(newDiv);
-		this.modSlider.onUpdate = (v) => {h.mod(this.name, v)};
+		this.modSlider.onUpdate = (v) => {this.h.mod(this.name, v)};
 
 		// selects for waveforms of vcos and mod
 		newDiv = document.createElement("div");
@@ -1082,6 +1141,47 @@ class FMELEM extends HTMLElement {
 		newDiv.appendChild(this.modWaveSelect);
 		this.shadow.appendChild(newDiv);
 
+		// select for filter
+		newDiv = document.createElement("div");
+		newDiv.style.position = "absolute";
+		newDiv.style.left = "110px";
+		newDiv.style.top = "60px";
+		this.filterSelect = document.createElement("select");
+		["lowpass", "highpass", "bandpass", "notch", 
+		 "lowshelf", "highshelf", "peaking", "allpass"].map( (type) => {
+			let opt = document.createElement("option");
+			opt.innerHTML = type;
+			opt.value = type;
+			this.filterSelect.appendChild(opt);
+		});
+		this.filterSelect.onchange = (e) => {
+			let fm = this.h.find(this.name);
+			let type = e.target.value;
+			if (["lowshelf", "highshelf", "peaking"].includes(type)) {
+				fm.filterEnv = true;	
+				// display filter adsr sliders
+			} else {
+				fm.filterEnv = false;
+				// grey out filter adsr sliders
+			}
+			fm.filter.type = type;
+		}
+		newDiv.appendChild(this.filterSelect);
+		this.shadow.appendChild(newDiv);
+
+		// filter frequency slide
+		newDiv = document.createElement("div");
+		newDiv.style.position = "absolute";
+		newDiv.style.left = "200px";	
+		newDiv.style.top = "20px";
+		newDiv.style.width = "100px";
+		newDiv.style.height = "200px"	
+		this.filterFreqSlider = document.createElement("vertical-slider");
+		this.filterFreqSlider.min = 0;
+		this.filterFreqSlider.max = 1500;
+		newDiv.appendChild(this.filterFreqSlider);
+		this.shadow.appendChild(newDiv);
+		this.filterFreqSlider.onUpdate = (v) => {this.h.find(this.name).filterFreq = v};
 
 		// oscilloscope
 		newDiv = document.createElement("div");
@@ -1094,7 +1194,7 @@ class FMELEM extends HTMLElement {
 		newDiv.appendChild(this.oscilloscope);
 		this.shadow.appendChild(newDiv);
 		// connect o-scope
-		this.h.find(this.name).mapVCAS((vca) => {this.oscilloscope.connectTo(vca)});
+		this.oscilloscope.connectTo(this.h.find(this.name));
 		
 
 		// at some point it might be good to abstract this away, some adsr html element
