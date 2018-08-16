@@ -590,6 +590,7 @@ class FM extends POLY {
 		// does this work?
 		// I think so 
 		// TODO: test new poly FM a lot
+		console.log("curr voice filter", this.vcfs[this.currVoice])
 		super.gateOn(f, d);
 	}
 
@@ -630,6 +631,7 @@ class FM extends POLY {
 	}
 
 	set filterFreq(f) {
+		console.log("there are", this.vcfs.length, "filters");
 		this.vcfs.map((vcf) => {
 			vcf.frequency = f;
 		});
@@ -1030,12 +1032,22 @@ class SEQU extends HTMLElement {
 		newDiv.style.background = "blue";
 		newDiv.onclick = () => {this.toggle()};
 		this.shadow.appendChild(newDiv);
+		// button for step
+		newDiv = document.createElement("div");
+		newDiv.style.position = "absolute";
+		newDiv.style.top = this.height - 100 + "px";
+		newDiv.style.left = this.width / 2 + "px";
+		newDiv.style.height = 100 + "px";
+		newDiv.style.width = "100px";
+		newDiv.style.background = "red";
+		newDiv.onclick = () => {this.step()};
+		this.shadow.appendChild(newDiv);
 
 		// sliders for duration, stepTime
 		newDiv = document.createElement("div");
 		newDiv.style.position = "absolute";
 		newDiv.style.top = this.height - 100 + "px";
-		newDiv.style.left = this.width / 2 + "px";
+		newDiv.style.left = this.width / 2 + 100 + "px";
 		newDiv.style.height = 100 + "px";
 		newDiv.style.width = 100 + "px";
 		this.durationSlider = document.createElement("vertical-slider");
@@ -1049,7 +1061,7 @@ class SEQU extends HTMLElement {
 		newDiv = document.createElement("div");
 		newDiv.style.position = "absolute";
 		newDiv.style.top = this.height - 100 + "px";
-		newDiv.style.left = this.width / 2 + 100 + "px";
+		newDiv.style.left = this.width / 2 + 200 + "px";
 		newDiv.style.height = 100 + "px";
 		newDiv.style.width = 100 + "px";
 		this.stepTimeSlider = document.createElement("vertical-slider");
@@ -1105,8 +1117,19 @@ class SEQU extends HTMLElement {
     this.on ? this.stop() : this.start();
   }
 
+	step() {
+		if (this.on) {
+			this.stop();
+		}
+		h.noteon(this.targetName,
+						 midiToFrequency(Math.round(this.sliders[this.currIndex].value)),
+						 this.duration);
+		this.currIndex++;
+		this.currIndex %= this.numSteps;
+	}
+
 	restart() {
-    this.currIndex  = 0;
+    this.currIndex = 0;
 		this.start();
 	}
 
