@@ -820,12 +820,16 @@ class VSlider extends HTMLElement {
     this.cont   = this.parentNode;
     this.height = this.cont.clientHeight;
     this.width  = this.cont.clientWidth;
-    this.sliderHeight = 10;
+    this.sliderHeight = this.width / 8;
 
     // def need a better color scheme, or maybe some programmatic way
     // to set colors
-    this.style.background = "#f2e52d";
     this.style.position   = "absolute";
+		let lineDiv = document.createElement("div");
+		lineDiv.style.width = "50%";
+		lineDiv.style.height = "100%";
+		lineDiv.style.borderRight = "1px solid #a8a8a8";
+		this.shadow.appendChild(lineDiv);
 
     // grab target, if specified, default is to give midi to freq
     if (this.hasAttribute("targetf")) {
@@ -841,10 +845,11 @@ class VSlider extends HTMLElement {
     this.slider = document.createElement("div");
     this.slider.style.position = "absolute";
     this.slider.style.height = this.sliderHeight + "px";
-    this.slider.style.width = "100%";
-    this.slider.style.left = "0";
-    this.slider.style.top = (this.height / 2) - 5 + "px";
-    this.slider.style.background = "#5ed6a3";
+    this.slider.style.width = this.sliderHeight + "px";
+		this.slider.style.borderRadius = this.sliderHeight + "px";
+    this.slider.style.left = this.width / 2 - this.sliderHeight / 2 + "px";;
+    this.slider.style.top = (this.height / 2) - this.sliderHeight / 2 + "px";
+    this.slider.style.background = "#3A83B0";
 
     // make this shit draggable
     // vars for calculating distance traveled
@@ -1003,14 +1008,14 @@ class SEQU extends HTMLElement {
     }
     
     // creating sliders and adding them to shadow
-    var xPos = 0;
-    var stepWidth = this.width / this.numSteps;
+    var xPos = this.width / 10;
+    var stepWidth = (this.width * (9/10) ) / this.numSteps;
     for (var i = 0; i < this.numSteps; i++) {
       let newDiv = document.createElement("div"); 
       newDiv.style.position = "absolute";
-      newDiv.style.top = 0;
+      newDiv.style.top = this.height / 20 + "px";
       newDiv.style.left = xPos + "px";
-      newDiv.style.height = this.height - 100 + "px";
+      newDiv.style.height = this.height * (18/20) + "px";
       newDiv.style.width = stepWidth + "px";
 
       let newSlider = document.createElement("vertical-slider");
@@ -1022,63 +1027,52 @@ class SEQU extends HTMLElement {
       xPos += stepWidth;
     }
 
+		// container for left side controls
+		this.side = document.createElement("div");
+		this.side.style.position = "absolute";
+		this.side.style.top = 0;
+		this.side.style.left = 0;
+		this.side.style.width = this.width / 10 + "px";
+
 		// create button for on / off
-		let newDiv = document.createElement("div");
-		newDiv.style.position = "absolute";
-		newDiv.style.top = this.height - 100 + "px";
-		newDiv.style.left = 0;
-		newDiv.style.height = 100 + "px";
-		newDiv.style.width = this.width / 2 + "px";
-		newDiv.style.background = "blue";
+		let newDiv = document.createElement("button");
+		newDiv.innerHTML = "playpause";
+		newDiv.style.display = "block";
 		newDiv.onclick = () => {this.toggle()};
-		this.shadow.appendChild(newDiv);
+		this.side.appendChild(newDiv);
 		// button for step
-		newDiv = document.createElement("div");
-		newDiv.style.position = "absolute";
-		newDiv.style.top = this.height - 100 + "px";
-		newDiv.style.left = this.width / 2 + "px";
-		newDiv.style.height = 100 + "px";
-		newDiv.style.width = "100px";
-		newDiv.style.background = "red";
+		newDiv = document.createElement("button");
+		newDiv.innerHTML = "step";
+		newDiv.style.display = "block";
 		newDiv.onclick = () => {this.step()};
-		this.shadow.appendChild(newDiv);
+		this.side.appendChild(newDiv);
 
 		// sliders for duration, stepTime
-		newDiv = document.createElement("div");
-		newDiv.style.position = "absolute";
-		newDiv.style.top = this.height - 100 + "px";
-		newDiv.style.left = this.width / 2 + 100 + "px";
-		newDiv.style.height = 100 + "px";
-		newDiv.style.width = 100 + "px";
-		this.durationSlider = document.createElement("vertical-slider");
-		// setup updateCallback for slider
-		this.durationSlider.min = .01;
-		this.durationSlider.max = 1;
-		newDiv.appendChild(this.durationSlider);
-		this.shadow.appendChild(newDiv);
-		this.durationSlider.onUpdate = (v) => {console.log('duration:', v); this.duration = v};
+		newDiv = document.createElement("input");
+		newDiv.type = "number";
+		newDiv.value = 250;
+		newDiv.onchange = (e) => {console.log('duration:', e.target.value / 1000); this.duration = e.target.value / 1000};
+		this.side.appendChild(newDiv);
+		let newLabel = document.createElement("span");
+		newLabel.innerHTML = "duration";
+		this.side.appendChild(newLabel);
 
-		newDiv = document.createElement("div");
-		newDiv.style.position = "absolute";
-		newDiv.style.top = this.height - 100 + "px";
-		newDiv.style.left = this.width / 2 + 200 + "px";
-		newDiv.style.height = 100 + "px";
-		newDiv.style.width = 100 + "px";
-		this.stepTimeSlider = document.createElement("vertical-slider");
-		// setup updateCallback for slider
-		this.stepTimeSlider.min = 1;
-		this.stepTimeSlider.max = 500;
-		newDiv.appendChild(this.stepTimeSlider);
-		this.shadow.appendChild(newDiv);
-		this.stepTimeSlider.onUpdate = (v) => {console.log('stepTime:', v); this.stepTime = v};
+		newDiv = document.createElement("input");
+		newDiv.type = "number";
+		newDiv.value = 250;
+		newDiv.onchange = (e) => {console.log('stepTime:', e.target.value); this.stepTime = e.target.value};
+		this.side.appendChild(newDiv);
+		newLabel = document.createElement("span");
+		newLabel.innerHTML = "step time";
+		newLabel.style.display = "block";
+		this.side.appendChild(newLabel);
 
 		// create select
 		this.sel = document.createElement("select");
-		this.sel.style.position = "absolute";
-		this.sel.style.top = this.height - 50 + "px";
-		this.sel.style.left = this.width - 50 + "px";
 		this.sel.onchange = (o) => {this.targetName = o.target.value;};
-		this.shadow.appendChild(this.sel);
+		this.side.appendChild(this.sel);
+
+		this.shadow.appendChild(this.side);
   }
 
 
@@ -1316,10 +1310,10 @@ class FMELEM extends HTMLElement {
 		// oscilloscope
 		newDiv = document.createElement("div");
 		newDiv.style.position = "absolute";
-		newDiv.style.right = "0";	
-		newDiv.style.top = "0px";
-		newDiv.style.width = this.width / 4 + "px";
-		newDiv.style.height = this.height / 2 + "px"	
+		newDiv.style.left = "25vw";	
+		newDiv.style.top = "0";
+		newDiv.style.width = "50vw";
+		newDiv.style.height = "50vh";
 		this.oscilloscope = document.createElement("o-scope");
 		newDiv.appendChild(this.oscilloscope);
 		this.shadow.appendChild(newDiv);
@@ -1403,10 +1397,10 @@ class OSC extends HTMLElement {
 		// this encapsulates the 'this'
 		this.drawVisual = requestAnimationFrame(() => {this.draw.call(this)});
 		this.analyser.getByteTimeDomainData(this.dataArray);
-		this.canvasCtx.fillStyle = 'rgb(200, 200, 200)';
+		this.canvasCtx.fillStyle = '#238C53';
 		this.canvasCtx.fillRect(0, 0, this.width, this.height);
 		this.canvasCtx.lineWidth = 2;
-		this.canvasCtx.strokeStyle = 'rgb(0, 0, 0)';
+		this.canvasCtx.strokeStyle = '#FCAB56';
 		this.canvasCtx.beginPath();
 		var sliceWidth = this.width * 1.0 / this.bufferLength;
 		var x = 0;
