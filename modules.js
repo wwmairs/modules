@@ -802,6 +802,124 @@ class Handler {
   **/
 
 /**
+  * hslider.js
+  *
+  * a horizontal dom object slider
+  *
+  **/
+
+class HSlider extends HTMLElement {
+  constructor() {
+    super();
+    this.shadow = this.attachShadow({mode: "open"});
+		this.min = 48;
+		this.max = 72;
+  }
+
+  connectedCallback() {
+    this.cont   = this.parentNode;
+    this.height = this.cont.clientHeight;
+    this.width  = this.cont.clientWidth;
+    this.sliderHeight = this.width / 8;
+
+    // def need a better color scheme, or maybe some programmatic way
+    // to set colors
+    this.style.position   = "absolute";
+		let lineDiv = document.createElement("div");
+		lineDiv.style.width = "50%";
+		lineDiv.style.height = "100%";
+		lineDiv.style.borderRight = "1px solid #a8a8a8";
+		this.shadow.appendChild(lineDiv);
+
+    // grab target, if specified, default is to give midi to freq
+    if (this.hasAttribute("targetf")) {
+      let target_string = this.getAttribute("targetf");
+      this.updateCallback = (v) => {
+        let t = eval(target_string);
+        t.frequency = midiToFrequency(Math.round(v));
+      };
+    } else {
+      this.updateCallback = (v) => v;
+    }
+    // make a circular element
+    this.slider = document.createElement("div");
+    this.slider.style.position = "absolute";
+    this.slider.style.height = this.sliderHeight + "px";
+    this.slider.style.width = this.sliderHeight + "px";
+		this.slider.style.borderRadius = this.sliderHeight + "px";
+    this.slider.style.left = this.width / 2 - this.sliderHeight / 2 + "px";;
+    this.slider.style.top = (this.height / 2) - this.sliderHeight / 2 + "px";
+    this.slider.style.background = "#3A83B0";
+
+    // make this shit draggable
+    // vars for calculating distance traveled
+    var pos1 = 0, pos2 = 0, that = this;
+    function dragMouseDown(e) {
+      e = e || window.event;
+      pos2 = e.clientY; 
+      document.onmouseup = endDrag;
+      document.onmousemove = dragSlider;
+    }
+
+    function dragSlider(e) {
+      e = e || window.event;
+      pos1 = pos2 - e.clientY;
+      pos2 = e.clientY;
+      let newPos = that.slider.offsetTop - pos1;
+
+      // make sure it's not off the ends
+      if ((newPos <= that.offsetTop + that.offsetHeight - 10) &&
+          (newPos >= that.offsetTop)) {
+        that.slider.style.top = newPos + "px";
+				// continuous updating
+        //that.updateCallback(that.value);
+      }
+    }
+
+    function endDrag() {
+			// updating only on mouse up
+			//console.log(that.updateCallback);
+      that.updateCallback(that.value);
+      document.onmouseup   = null;
+      document.onmousemove = null;
+    }
+    this.slider.onmousedown = dragMouseDown;
+
+    this.shadow.appendChild(this.slider);
+  }
+
+  set height(h) {
+    this._h = h;
+    this.style.height = h + "px";
+  }
+
+  get height() {
+    return this._h;
+  }
+
+  get width() {
+    return this._w;
+  }
+
+  set width(w) {
+    this._w = w;
+    this.style.width = w + "px";
+  }
+
+	set onUpdate(f) {
+		this.updateCallback = f;
+	}
+
+	get value() {
+    return scale(this.slider.offsetTop, this.offsetTop,
+                 this.offsetTop + this.offsetHeight - this.sliderHeight,
+                 this.min, this.max);
+	}
+}
+
+customElements.define('horizontal-slider', HSlider);
+
+/**
   * vslider.js
   *
   * a vertical dom object slider
