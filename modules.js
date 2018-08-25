@@ -113,8 +113,8 @@ class VCF {
         this.frequencyParam = this.biquadFilter.frequency;
         // initial values
         this.type           = "lowpass";
-        this.frequency      = 800;
-        this.Q              = 15;
+        this.frequency      = 0;
+        this.Q              = .5;
 				this.gain						= -200;
 				this.env            = new ADSR(context);
 				this.env.connect(this.biquadFilter.gain);
@@ -125,7 +125,6 @@ class VCF {
     }
 
     set frequency(f) {
-				console.log("setting filter frequency to", f);
         this.biquadFilter.frequency.setValueAtTime(f, this.context.currentTime);
     }
 
@@ -553,6 +552,7 @@ class FM extends POLY {
     super(_ctx);
 		this.modFactor = 4;
 		this.filterEnv = false;
+		this.constantFilterFreqNode.offset.value = 440;
   }
 
 	newOscillators(n) {
@@ -569,9 +569,9 @@ class FM extends POLY {
 		let newENV = new ADSR(this.ctx);
 		let newVCF = new  VCF(this.ctx);
 		let newMOD = new MODU(this.ctx);
-		newVCO.connect(newVCA);
+		newVCO.connect(newVCF);
 		newENV.connect(newVCA.amplitudeParam);
-		newVCA.connect(newVCF);
+		newVCF.connect(newVCA);
 		newMOD.connect(newVCO.frequencyParam);
 		newVCF.env.max = -200;
 		this.constantFilterFreqNode.connect(newVCF.frequencyParam);
@@ -593,7 +593,6 @@ class FM extends POLY {
 		// does this work?
 		// I think so 
 		// TODO: test new poly FM a lot
-		console.log("curr voice filter", this.vcfs[this.currVoice])
 		super.gateOn(f, d);
 	}
 
@@ -634,6 +633,7 @@ class FM extends POLY {
 	}
 
 	set filterFreq(f) {
+		console.log('setting filter freq to',f);
 		this.constantFilterFreqNode.offset.value = f;
 	}
 
@@ -663,12 +663,12 @@ class FM extends POLY {
 
 	connect(module) {
 		if (module.hasOwnProperty('input')) {
-			this.vcfs.map((vcf) => {
-				vcf.connect(module.input);
+			this.vcas.map((vca) => {
+				vca.connect(module.input);
 			});
 		} else {
-			this.vcfs.map((vcf) => {
-				vcf.connect(module);
+			this.vcas.map((vca) => {
+				vca.connect(module);
 			});
 		}
 	}
