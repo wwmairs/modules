@@ -558,7 +558,9 @@ class FM extends POLY {
 	newOscillators(n) {
 		this.mods = []
 		this.vcfs = [];
+		this.constantFilterFreqNode = this.ctx.createConstantSource();
 		super.newOscillators(n);
+		this.constantFilterFreqNode.start();
 	}
 
 	newOscillator() {
@@ -572,6 +574,7 @@ class FM extends POLY {
 		newVCA.connect(newVCF);
 		newMOD.connect(newVCO.frequencyParam);
 		newVCF.env.max = -200;
+		this.constantFilterFreqNode.connect(newVCF.frequencyParam);
 		this.vcos.push(newVCO);
 		this.vcas.push(newVCA);
 		this.envs.push(newENV);
@@ -581,7 +584,7 @@ class FM extends POLY {
 
 	gateOn(f = false, d = false) {
 		if (f) {
-			this.mods[this.currVoice].frequency = f / this.modFactor;
+			this.mods[this.currVoice].frequency = f * this.modFactor;
 			this.frequency = f;
 		}
 		if (this.filterEnv) {
@@ -631,10 +634,7 @@ class FM extends POLY {
 	}
 
 	set filterFreq(f) {
-		console.log("there are", this.vcfs.length, "filters");
-		this.vcfs.map((vcf) => {
-			vcf.frequency = f;
-		});
+		this.constantFilterFreqNode.offset.value = f;
 	}
 
 	set filterAttack(a) {
@@ -1181,7 +1181,18 @@ class FMELEM extends HTMLElement {
     this.cont      = this.parentNode;
     this.height    = this.cont.clientHeight;
     this.width     = this.cont.clientWidth;
-		
+	
+		this.leftSide = document.createElement("div");
+		this.leftSide.style.position = "absolute";
+		this.leftSide.style.left = "0";
+		this.leftSide.style.width = "30vw";
+		this.leftSide.style.height = "50vh";
+		this.rightSide = document.createElement("div");
+		this.rightSide.style.position = "absolute";
+		this.rightSide.style.left = "70vw";
+		this.rightSide.style.width = "30vw";
+		this.rightSide.style.height = "50vh";
+
 		// name and buttons and things I suppose
 		let newDiv = document.createElement("div");
 		newDiv.style.position = "absolute";
@@ -1189,25 +1200,9 @@ class FMELEM extends HTMLElement {
 		newDiv.style.transform = "translateX(-50%)";
 		newDiv.innerHTML = "FM";
 		this.shadow.appendChild(newDiv);
-		// slider for modulating
-		newDiv = document.createElement("div");
-		newDiv.style.position = "absolute";
-		newDiv.style.left = "0";	
-		newDiv.style.top = "20px";
-		newDiv.style.width = "100px";
-		newDiv.style.height = "200px"	
-		this.modSlider = document.createElement("vertical-slider");
-		this.modSlider.min = 0;
-		this.modSlider.max = 127;
-		newDiv.appendChild(this.modSlider);
-		this.shadow.appendChild(newDiv);
-		this.modSlider.onUpdate = (v) => {this.h.mod(this.name, v)};
 
 		// selects for waveforms of vcos and mod
 		newDiv = document.createElement("div");
-		newDiv.style.position = "absolute";
-		newDiv.style.left = "110px";
-		newDiv.style.top = "20px";
 		this.waveSelect = document.createElement("select");
 		["sine", "square", "sawtooth", "triangle"].map( (type) => {
 			let opt = document.createElement("option");
@@ -1219,12 +1214,9 @@ class FMELEM extends HTMLElement {
 			this.h.waveForm(this.name, e.target.value);
 		}
 		newDiv.appendChild(this.waveSelect);
-		this.shadow.appendChild(newDiv);
+		this.leftSide.appendChild(newDiv);
 
 		newDiv = document.createElement("div");
-		newDiv.style.position = "absolute";
-		newDiv.style.left = "110px";
-		newDiv.style.top = "40px";
 		this.modWaveSelect = document.createElement("select");
 		["sine", "square", "sawtooth", "triangle"].map( (type) => {
 			let opt = document.createElement("option");
@@ -1236,13 +1228,36 @@ class FMELEM extends HTMLElement {
 			this.h.modWaveForm(this.name, e.target.value);
 		}
 		newDiv.appendChild(this.modWaveSelect);
-		this.shadow.appendChild(newDiv);
+		this.leftSide.appendChild(newDiv);
 
-		// select for filter
+		// slider for modulating
+		newDiv = document.createElement("input");
+		newDiv.type = "number";
+		newDiv.value = 4;
+		newDiv.onchange = (e) => {console.log('mod value:', e.target.value); this.h.mod(this.name, e.target.value);};
+		this.leftSide.appendChild(newDiv);
+		let newLabel = document.createElement("span");
+		newLabel.innerHTML = "mod ratio";
+		this.leftSide.appendChild(newLabel);
+
+		this.shadow.appendChild(this.leftSide);
+
+		// oscilloscope
 		newDiv = document.createElement("div");
 		newDiv.style.position = "absolute";
-		newDiv.style.left = "110px";
-		newDiv.style.top = "60px";
+		newDiv.style.left = "30vw";	
+		newDiv.style.top = "0";
+		newDiv.style.width = "40vw";
+		newDiv.style.height = "50vh";
+		this.oscilloscope = document.createElement("o-scope");
+		newDiv.appendChild(this.oscilloscope);
+		this.shadow.appendChild(newDiv);
+		// connect o-scope
+		this.oscilloscope.connectTo(this.h.find(this.name));
+
+		this.shadow.appendChild(this.rightSide);
+
+		// select for filter
 		this.filterSelect = document.createElement("select");
 		["lowpass", "highpass", "bandpass", "notch", 
 		 "lowshelf", "highshelf", "peaking", "allpass"].map( (type) => {
@@ -1265,33 +1280,32 @@ class FMELEM extends HTMLElement {
 				filter.type = type;
 			});
 		}
-		newDiv.appendChild(this.filterSelect);
-		this.shadow.appendChild(newDiv);
+		this.rightSide.appendChild(this.filterSelect);
 
 		// filter frequency slide
 		newDiv = document.createElement("div");
-		newDiv.style.position = "absolute";
-		newDiv.style.left = "200px";	
-		newDiv.style.top = "20px";
-		newDiv.style.width = "100px";
-		newDiv.style.height = "200px"	
+		newDiv.style.width = "50px";
+		newDiv.style.height = "10vh";
+		newDiv.style.display = "inline-block";
 		this.filterFreqSlider = document.createElement("vertical-slider");
 		this.filterFreqSlider.min = 0;
 		this.filterFreqSlider.max = 1500;
 		newDiv.appendChild(this.filterFreqSlider);
-		this.shadow.appendChild(newDiv);
+		this.rightSide.appendChild(newDiv);
 		this.filterFreqSlider.onUpdate = (v) => {this.h.find(this.name).filterFreq = v};
 
 		// controls for filter adsr
+		newLabel = document.createElement("span");
+		newLabel.innerHTML = "filter envelope";
+		this.rightSide.appendChild(newLabel);
 		newDiv = document.createElement("div");
-		newDiv.style.position = "absolute";
-		newDiv.style.left = "320px";	
-		newDiv.style.top = "20px";
-		newDiv.style.width = "300px";
-		newDiv.style.height = "100px"	
+		newDiv.style.position = "relative";
+		newDiv.style.left = "0";
+		newDiv.style.width = "30vw";
+		newDiv.style.height = "16vh";
 		this.filterADSRbank = document.createElement("vertical-slide-bank");
 		newDiv.appendChild(this.filterADSRbank);
-		this.shadow.appendChild(newDiv);
+		this.rightSide.appendChild(newDiv);
 		this.filterADSRbank.mapSliders((s) => {
 			s.min = 0;
 			s.max = 1;
@@ -1307,30 +1321,20 @@ class FMELEM extends HTMLElement {
 		// release
 		this.filterADSRbank.sliders[3].onUpdate = (v) => {h.filterR(this.name, v)};
 
-		// oscilloscope
-		newDiv = document.createElement("div");
-		newDiv.style.position = "absolute";
-		newDiv.style.left = "25vw";	
-		newDiv.style.top = "0";
-		newDiv.style.width = "50vw";
-		newDiv.style.height = "50vh";
-		this.oscilloscope = document.createElement("o-scope");
-		newDiv.appendChild(this.oscilloscope);
-		this.shadow.appendChild(newDiv);
-		// connect o-scope
-		this.oscilloscope.connectTo(this.h.find(this.name));
 		
 
 		// controls for amplitude adsr
+		newLabel = document.createElement("span");
+		newLabel.innerHTML = "carrier amplitude envelope";
+		this.rightSide.appendChild(newLabel);
 		newDiv = document.createElement("div");
-		newDiv.style.position = "absolute";
-		newDiv.style.left = "0";	
-		newDiv.style.top = "230px";
-		newDiv.style.width = "400px";
-		newDiv.style.height = "100px"	
+		newDiv.style.position = "relative";
+		newDiv.style.left = "0";
+		newDiv.style.width = "30vw";
+		newDiv.style.height = "16vh";
 		this.ADSRbank = document.createElement("vertical-slide-bank");
 		newDiv.appendChild(this.ADSRbank);
-		this.shadow.appendChild(newDiv);
+		this.rightSide.appendChild(newDiv);
 		this.ADSRbank.mapSliders((s) => {
 			s.min = 0;
 			s.max = 1;
@@ -1349,6 +1353,7 @@ class FMELEM extends HTMLElement {
 		for (var i = 0; i < sequencers.length; i ++) {
 			sequencers[i].displayInstrument(this.name);
 		}
+
 	}
 }
 
@@ -1399,7 +1404,7 @@ class OSC extends HTMLElement {
 		this.analyser.getByteTimeDomainData(this.dataArray);
 		this.canvasCtx.fillStyle = '#238C53';
 		this.canvasCtx.fillRect(0, 0, this.width, this.height);
-		this.canvasCtx.lineWidth = 2;
+		this.canvasCtx.lineWidth = 5;
 		this.canvasCtx.strokeStyle = '#FCAB56';
 		this.canvasCtx.beginPath();
 		var sliceWidth = this.width * 1.0 / this.bufferLength;
