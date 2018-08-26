@@ -820,15 +820,15 @@ class HSlider extends HTMLElement {
     this.cont   = this.parentNode;
     this.height = this.cont.clientHeight;
     this.width  = this.cont.clientWidth;
-    this.sliderHeight = this.width / 8;
+    this.sliderHeight = this.height / 8;
 
     // def need a better color scheme, or maybe some programmatic way
     // to set colors
     this.style.position   = "absolute";
 		let lineDiv = document.createElement("div");
-		lineDiv.style.width = "50%";
-		lineDiv.style.height = "100%";
-		lineDiv.style.borderRight = "1px solid #a8a8a8";
+		lineDiv.style.width = "100%";
+		lineDiv.style.height = "50%";
+		lineDiv.style.borderBottom = "1px solid #a8a8a8";
 		this.shadow.appendChild(lineDiv);
 
     // grab target, if specified, default is to give midi to freq
@@ -856,21 +856,22 @@ class HSlider extends HTMLElement {
     var pos1 = 0, pos2 = 0, that = this;
     function dragMouseDown(e) {
       e = e || window.event;
-      pos2 = e.clientY; 
+      pos2 = e.clientX; 
+			console.log("starting pos2", pos2);
       document.onmouseup = endDrag;
       document.onmousemove = dragSlider;
     }
 
     function dragSlider(e) {
       e = e || window.event;
-      pos1 = pos2 - e.clientY;
-      pos2 = e.clientY;
-      let newPos = that.slider.offsetTop - pos1;
+      pos1 = pos2 - e.clientX;
+      pos2 = e.clientX;
+      let newPos = that.slider.offsetLeft - pos1;
 
       // make sure it's not off the ends
-      if ((newPos <= that.offsetTop + that.offsetHeight - 10) &&
-          (newPos >= that.offsetTop)) {
-        that.slider.style.top = newPos + "px";
+      if ((newPos <= that.offsetLeft + that.offsetWidth - that.sliderHeight / 2) &&
+          (newPos >= that.offsetLeft)) {
+        that.slider.style.left = newPos + "px";
 				// continuous updating
         //that.updateCallback(that.value);
       }
@@ -911,8 +912,8 @@ class HSlider extends HTMLElement {
 	}
 
 	get value() {
-    return scale(this.slider.offsetTop, this.offsetTop,
-                 this.offsetTop + this.offsetHeight - this.sliderHeight,
+    return scale(this.slider.offsetLeft, this.offsetLeft,
+                 this.offsetLeft + this.offsetWidth - this.sliderHeight,
                  this.min, this.max);
 	}
 }
@@ -1092,6 +1093,9 @@ class VSliders extends HTMLElement {
 
 customElements.define('vertical-slide-bank', VSliders);
 
+class Controller extends HTMLElement {
+}
+
 /**
   * sequ.js
   *
@@ -1190,6 +1194,7 @@ class SEQU extends HTMLElement {
 		this.sel.onchange = (o) => {this.targetName = o.target.value;};
 		this.side.appendChild(this.sel);
 
+
 		this.shadow.appendChild(this.side);
   }
 
@@ -1230,6 +1235,7 @@ class SEQU extends HTMLElement {
   }
 
 	step() {
+		if (this.targetName == "disconnect") return;
 		if (this.on) {
 			this.stop();
 		}
@@ -1246,6 +1252,7 @@ class SEQU extends HTMLElement {
 	}
 
   start() {
+		if (this.targetName == "disconnect") return;
     window.clearInterval(this.timer);
 		assert(this.targetName != undefined, "trying to start sequencer with no target");
     this.on         = true;
@@ -1267,7 +1274,13 @@ class SEQU extends HTMLElement {
   }
 
 	displayInstrument(name) {
-		this.targetName = name;
+		if (this.sel.children.length == 0) {
+			let opt = document.createElement("option");
+			opt.innerHTML = "disconnect";
+			opt.value = "disconnect";
+			this.sel.appendChild(opt);
+			this.targetName = "disconnect";
+		}
 		let opt = document.createElement("option");
 		opt.innerHTML = name;
 		opt.value = name;
@@ -1402,10 +1415,10 @@ class FMELEM extends HTMLElement {
 
 		// filter frequency slide
 		newDiv = document.createElement("div");
-		newDiv.style.width = "50px";
-		newDiv.style.height = "10vh";
-		newDiv.style.display = "inline-block";
-		this.filterFreqSlider = document.createElement("vertical-slider");
+		newDiv.style.width = "10vw";
+		newDiv.style.height = "50px";
+
+		this.filterFreqSlider = document.createElement("horizontal-slider");
 		this.filterFreqSlider.min = 0;
 		this.filterFreqSlider.max = 1500;
 		newDiv.appendChild(this.filterFreqSlider);
@@ -1467,9 +1480,9 @@ class FMELEM extends HTMLElement {
 		this.ADSRbank.sliders[3].onUpdate = (v) => {h.ampR(this.name, v)};
 
 		// tell all sequencers to display name
-		let sequencers = document.getElementsByClassName("sequencer");
-		for (var i = 0; i < sequencers.length; i ++) {
-			sequencers[i].displayInstrument(this.name);
+		let controllers = document.getElementsByClassName("controller");
+		for (var i = 0; i < controllers.length; i ++) {
+			controllers[i].displayInstrument(this.name);
 		}
 
 	}
