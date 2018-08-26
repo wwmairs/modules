@@ -27,6 +27,96 @@ function assert(bool, msg) {
 	}
 }
 
+// from https://gist.githubusercontent.com/guitarpickfm/9e32f7b114366edd12ab081194ae95bb/raw/29c5c7ffa9c1973d7257d1745dc3159d05e1647f/MIDI_scales.js
+
+const MIDI_SCALES = {
+         'natural major': [0,2,4,5,7,9,11,12],
+         'ionian': [0,2,4,5,7,9,11,12],
+         'major': [0,2,4,5,7,9,11,12],
+         'chromatic': [0,1,2,3,4,5,6,7,8,9,10,11,12],
+         'spanish 8 tone': [0,1,3,4,5,6,8,10,12],
+         'flamenco': [0,1,3,4,5,7,8,10,12],
+         'symmetrical': [0,1,3,4,6,7,9,10,12],
+         'inverted diminished': [0,1,3,4,6,7,9,10,12],
+         'diminished': [0,2,3,5,6,8,9,11,12],
+         'whole tone': [0,2,4,6,8,10,12],
+         'augmented': [0,3,4,7,8,11,12],
+         '3 semitone': [0,3,6,9,12],
+         '4 semitone': [0,4,8,12],
+         'locrian ultra': [0,1,3,4,6,8,9,12],
+         'locrian super': [0,1,3,4,6,8,10,12],
+         'indian': [0,1,3,4,7,8,10,12],
+         'locrian': [0,1,3,5,6,8,10,12],
+         'phrygian': [0,1,3,5,7,8,10,12],
+         'neapolitan minor': [0,1,3,5,7,8,11,12],
+         'javanese': [0,1,3,5,7,9,10,12],
+         'neapolitan major': [0,1,3,5,7,9,11,12],
+         'todi': [0,1,3,6,7,8,11,12],
+         'persian': [0,1,4,5,6,8,11,12],
+         'oriental': [0,1,4,5,6,9,10,12],
+         'phrygian major': [0,1,4,5,7,8,10,12],
+         'spanish': [0,1,4,5,7,8,10,12],
+         'jewish': [0,1,4,5,7,8,10,12],
+         'double harmonic': [0,1,4,5,7,8,11,12],
+         'gypsy': [0,1,4,5,7,8,11,12],
+         'byzantine': [0,1,4,5,7,8,11,12],
+         'chahargah': [0,1,4,5,7,8,11,12],
+         'marva': [0,1,4,6,7,9,11,12],
+         'enigmatic': [0,1,4,6,8,10,11,12],
+         'locrian natural': [0,2,3,5,6,8,10,12],
+         'natural minor': [0,2,3,5,7,8,10,12],
+         'minor': [0,2,3,5,7,8,10,12],
+         'melodic minor': [0,2,3,5,7,9,11,12],
+         'aeolian': [0,2,3,5,7,8,10,12],
+         'algerian 2': [0,2,3,5,7,8,10,12],
+         'hungarian minor': [0,2,3,6,7,8,11,12],
+         'algerian': [0,2,3,6,7,8,11,12],
+         'algerian 1': [0,2,3,6,7,8,11,12],
+         'harmonic minor': [0,2,3,5,7,8,11,12],
+         'mohammedan': [0,2,3,5,7,8,11,12],
+         'dorian': [0,2,3,5,7,9,10,12],
+         'hungarian gypsy': [0,2,3,6,7,8,11,12],
+         'romanian': [0,2,3,6,7,9,10,12],
+         'locrian major': [0,2,4,5,6,8,10,12],
+         'arabian': [0,1,4,5,7,8,11,12],
+         'hindu': [0,2,4,5,7,8,10,12],
+         'ethiopian': [0,2,4,5,7,8,11,12],
+         'mixolydian': [0,2,4,5,7,9,10,12],
+         'mixolydian augmented': [0,2,4,5,8,9,10,12],
+         'harmonic major': [0,2,4,5,8,9,11,12],
+         'lydian minor': [0,2,4,6,7,8,10,12],
+         'lydian dominant': [0,2,4,6,7,9,10,12],
+         'overtone': [0,2,4,6,7,9,10,12],
+         'lydian': [0,2,4,6,7,9,11,12],
+         'lydian augmented': [0,2,4,6,8,9,10,12],
+         'leading whole tone': [0,2,4,6,8,10,11,12],
+         'blues': [0,3,5,6,7,10,12],
+         'hungarian major': [0,3,4,6,7,9,10,12],
+         'pb': [0,1,3,6,8,12],
+         'balinese': [0,1,3,7,8,12],
+         'pe': [0,1,3,7,8,12],
+         'pelog': [0,1,3,7,10,12],
+         'iwato': [0,1,5,6,10,12],
+         'japanese': [0,1,5,7,8,12],
+         'kumoi': [0,1,5,7,8,12],
+         'hirajoshi': [0,2,3,7,8,12],
+         'pa': [0,2,3,7,8,12],
+         'pd': [0,2,3,7,9,12],
+         'pentatonic major': [0,2,4,7,9,12],
+         'chinese': [0,2,4,7,9,12],
+         'chinese 1': [0,2,4,7,9,12],
+         'mongolian': [0,2,4,7,9,12],
+         'pfcg': [0,2,4,7,9,12],
+         'egyptian': [0,2,3,6,7,8,11,12],
+         'pentatonic minor': [0,3,5,7,10,12],
+         'chinese 2': [0,4,6,7,11,12],
+         'altered': [0,1,3,4,6,8,10,12],
+         'bebop dominant': [0,2,4,5,7,9,10,11,12],
+         'bebop dominant flatnine': [0,1,4,5,7,9,10,11,12],
+         'bebop major': [0,2,4,5,7,8,9,11,12],
+         'bebop minor': [0,2,3,5,7,8,9,10,12],
+         'bebop tonic minor': [0,2,3,5,7,8,9,11,12]};
+
 // a straightforward vco
 
 class VCO {
@@ -1094,7 +1184,116 @@ class VSliders extends HTMLElement {
 customElements.define('vertical-slide-bank', VSliders);
 
 class Controller extends HTMLElement {
+	constructor() {
+		super();
+    this.shadow  = this.attachShadow({mode: "open"});
+	}
+
+	connectedCallback() {
+		// create select
+		this.sel = document.createElement("select");
+		this.sel.onchange = (o) => {this.targetName = o.target.value;};
+		this.shadow.append(this.sel);
+
+		h.instruments.map((i) => {
+			this.displayInstrument(i.name);
+		});
+	}
+
+	noteon(f, d) {
+		h.noteon(this.targetName, f, d);
+	}
+
+	displayInstrument(name) {
+		if (this.sel.children.length == 0) {
+			let opt = document.createElement("option");
+			opt.innerHTML = "disconnect";
+			opt.value = "disconnect";
+			this.sel.appendChild(opt);
+			this.targetName = "disconnect";
+		}
+		let opt = document.createElement("option");
+		opt.innerHTML = name;
+		opt.value = name;
+		this.sel.appendChild(opt);
+	}
+
+	removeInstrument(name) {
+	}
 }
+
+class SChill extends Controller {
+	constructor() {
+		super();
+	}
+
+	// this is super helpful
+	// https://github.com/rfielding/Xstrument/blob/master/MusicTheory.c
+	// returns the interval to play
+	intervalFromKey(k) {
+		if (k == ' ' || k == 'j') {
+			k = this.lastKey;
+		} else {
+			this.lastKey = k;
+		}
+		let interval = 0;
+		switch (k) {
+			case 'n':
+				interval = 1;
+				break;
+			case 'h':
+				interval = -1;
+				break;
+			case "'":
+				interval = 0;
+				break;
+			case 's':
+				interval = 2;
+				break;
+			case 'r':
+				interval = -3;
+				break;
+			case 'i':
+				interval = 3;
+				break;
+			case 'k':
+				interval = -2;
+				break;
+			case 'c':
+				interval = -7;
+				break;
+			case 'x':
+				interval = -14;
+				break;
+			case ',':
+				interval = 7;
+				break;
+			case '.':
+				interval = 14;
+				break;
+			case 'p':
+				interval = -4;
+				break;
+			case 'e':
+				interval = 4;
+				break;
+			case 'w':
+				interval = 5;
+				break;
+			case 'v':
+				interval = -6;
+				break;
+			case 'm':
+				interval = 6;
+				break;
+			default:
+		}
+		return interval;
+	}
+	
+}
+
+customElements.define('sammy-chill', SChill);
 
 /**
   * sequ.js
@@ -1105,11 +1304,10 @@ class Controller extends HTMLElement {
   *
   **/
 
-class SEQU extends HTMLElement {
+class SEQU extends Controller {
   constructor() {
     super();
     this.sliders = [];
-    this.shadow  = this.attachShadow({mode: "open"});
     this.on      = false;
   }
 
@@ -1234,14 +1432,14 @@ class SEQU extends HTMLElement {
     this.on ? this.stop() : this.start();
   }
 
+
 	step() {
 		if (this.targetName == "disconnect") return;
 		if (this.on) {
 			this.stop();
 		}
-		h.noteon(this.targetName,
-						 midiToFrequency(Math.round(this.sliders[this.currIndex].value)),
-						 this.duration);
+		this.noteon(midiToFrequency(Math.round(this.sliders[this.currIndex].value)),
+						    this.duration);
 		this.currIndex++;
 		this.currIndex %= this.numSteps;
 	}
@@ -1258,9 +1456,8 @@ class SEQU extends HTMLElement {
     this.on         = true;
     this.timer      = window.setInterval(() => {
 			// send noteon to handler
-			h.noteon(this.targetName,
-							 midiToFrequency(Math.round(this.sliders[this.currIndex].value)),
-							 this.duration);
+			this.noteon(midiToFrequency(Math.round(this.sliders[this.currIndex].value)),
+							    this.duration);
       this.currIndex++;
       this.currIndex %= this.numSteps;
     }, this.stepTime);
@@ -1273,22 +1470,6 @@ class SEQU extends HTMLElement {
     window.clearInterval(this.timer);
   }
 
-	displayInstrument(name) {
-		if (this.sel.children.length == 0) {
-			let opt = document.createElement("option");
-			opt.innerHTML = "disconnect";
-			opt.value = "disconnect";
-			this.sel.appendChild(opt);
-			this.targetName = "disconnect";
-		}
-		let opt = document.createElement("option");
-		opt.innerHTML = name;
-		opt.value = name;
-		this.sel.appendChild(opt);
-	}
-
-	removeInstrument(name) {
-	}
 }
 
 customElements.define('step-sequence', SEQU);
