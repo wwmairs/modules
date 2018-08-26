@@ -27,7 +27,24 @@ function assert(bool, msg) {
 	}
 }
 
+function makePlayableNotes(scale, key) {
+	let octave = MIDI_SCALES[scale];
+	let nextNote = MIDI_OCTAVE_ZERO.findIndex((k) => k == key);
+	let notes = [];
+	while (nextNote <= 127) {
+		for (let i = 0; i < octave.length - 1; i++) {
+			if (nextNote + octave[i] <= 127) {
+				notes.push(nextNote + octave[i]);
+			}
+		}
+		nextNote+=12;
+	}
+	return notes;
+	
+}
 // from https://gist.githubusercontent.com/guitarpickfm/9e32f7b114366edd12ab081194ae95bb/raw/29c5c7ffa9c1973d7257d1745dc3159d05e1647f/MIDI_scales.js
+
+const MIDI_OCTAVE_ZERO = ['c', 'c#', 'd', 'd#', 'e', 'f', 'f#', 'g', 'g#', 'a', 'a#', 'b'];
 
 const MIDI_SCALES = {
          'natural major': [0,2,4,5,7,9,11,12],
