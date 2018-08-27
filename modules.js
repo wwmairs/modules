@@ -1218,6 +1218,7 @@ class Controller extends HTMLElement {
 	}
 
 	noteon(f, d) {
+		if (this.targetName == "disconnect") return;
 		h.noteon(this.targetName, f, d);
 	}
 
@@ -1242,6 +1243,83 @@ class Controller extends HTMLElement {
 class SChill extends Controller {
 	constructor() {
 		super();
+		this.key = "c";
+		this.scale = "natural major";
+		this.duration = .1;
+	}
+
+	connectedCallback() {
+		super.connectedCallback();
+
+		this.style.width = "100%";
+		this.style.height = "100%";
+		this.style.display = "block";
+
+		// make scale selector
+		this.scaleSel = document.createElement("select");
+		this.scaleSel.onchange = (o) => {this.defineNotes(o.target.value, this.key)};
+		Object.keys(MIDI_SCALES).map((s) => {
+			let opt = document.createElement("option");
+			opt.innerHTML = s;
+			opt.value = s;
+			this.scaleSel.appendChild(opt);
+		});
+		this.shadow.append(this.scaleSel);
+		// make key selector
+		this.keySel = document.createElement("select");
+		this.keySel.onchange = (o) => {this.defineNotes(this.scale, o.target.value)};
+		MIDI_OCTAVE_ZERO.map((k) => {
+			let opt = document.createElement("option");
+			opt.innerHTML = k;
+			opt.value = k;
+			this.keySel.appendChild(opt);
+		});
+		this.shadow.append(this.keySel);
+
+		this.noteDisplay = document.createElement("h3");
+		this.noteDisplay.style.textTransform = "uppercase";
+		this.shadow.appendChild(this.noteDisplay);
+		
+		this.defineNotes(this.scale, this.key);
+
+		this.onmouseover = () => this.hover = true; 
+		this.onmouseout = () => this.hover = false;
+
+		document.addEventListener('keypress', (e) => {
+			if (this.hover) {
+				let k = e.key;
+				this.lastKey = k;
+				this.findAndPlayNote(k);
+			}
+		});
+
+	}
+
+	set currNote(n) {
+		this.cn = n;
+		// update display
+		this.noteDisplay.innerHTML = MIDI_OCTAVE_ZERO[n % 12];
+	}
+
+	get currNote() {
+		return this.cn;
+	}
+
+	findAndPlayNote(k) {
+		console.log("key", k);
+		let i = this.intervalFromKey(k);
+		if (i != null) {
+			let newNote = this.currNote + i;
+			this.noteon(midiToFrequency(newNote), this.duration);
+			this.currNote = newNote;
+			console.log(this.currNote);
+		}
+	}
+
+
+	defineNotes(scale, key) {
+		this.notes = makePlayableNotes(scale, key);
+		this.currNote = this.notes[parseInt(this.notes.length / 2)];
 	}
 
 	// this is super helpful
@@ -1253,7 +1331,7 @@ class SChill extends Controller {
 		} else {
 			this.lastKey = k;
 		}
-		let interval = 0;
+		let interval = null;
 		switch (k) {
 			case 'n':
 				interval = 1;
@@ -1304,6 +1382,7 @@ class SChill extends Controller {
 				interval = 6;
 				break;
 			default:
+				interval = null;
 		}
 		return interval;
 	}
